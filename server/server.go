@@ -191,6 +191,28 @@ func InitialiseServer(config ServerConfig) error {
 	http.HandleFunc("/font/", staticHandle)
 	http.HandleFunc("/js/", staticHandle)
 
+	http.HandleFunc("/favicon.ico", func(rw http.ResponseWriter, r *http.Request) {
+		// Check for ETag
+		v, ok := r.Header["If-None-Match"]
+		if ok {
+			for i := range v {
+				if v[i] == etag || v[i] == etagCompareCaddy || strings.HasPrefix(v[i], etagCompareApache) {
+					rw.WriteHeader(http.StatusNotModified)
+					return
+				}
+			}
+		}
+
+		f, ok := cachedFiles["static/favicon.ico"]
+
+		if !ok {
+			rw.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		rw.Write(f)
+	})
+
 	// robots.txt
 	http.HandleFunc("/robots.txt", func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write(robottxt)
