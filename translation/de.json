@@ -1,0 +1,15 @@
+{
+    "Language": "de",
+	"Subject": "Betreff",
+	"Message": "Nachricht",
+    "PublishAnnouncement": "Veröffentliche Bekanntmachung",
+    "AnnouncementPublished": "Bekanntmachung wurde veröffentlicht!",
+    "PublishedAnnouncements": "Bereits veröffentlichte Bekanntmachungen",
+	"Login": "Login",
+    "Logout": "Logout",
+    "Password": "Passwort",
+    "CreatedBy": "Erstellt von",
+    "Impressum": "Impressum",
+    "PrivacyPolicy": "Datenschutzerklärung",
+    "AcceptPrivacyPolicy": "Ich akzeptiere die Datenschutzerklärung"
+}

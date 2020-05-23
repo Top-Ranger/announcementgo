@@ -1,0 +1,11 @@
+ {
+    "Language": "en",
+    "Address": "localhost:44455",
+    "LoginMinutes": 60,
+    "PathConfig": "config/",
+    "PathImpressum": "impressum.md",
+    "PathDSGVO": "DSGVO.md",
+    "AnnouncementsFolder": "announcements",
+    "DataSafe": "file",
+    "DataSafeConfig": "datasafe-file"
+ }

@@ -1,0 +1,15 @@
+{
+    "Language": "en",
+	"Subject": "Subject",
+	"Message": "Message",
+    "PublishAnnouncement": "Publish announcement",
+    "AnnouncementPublished": "Announcement was published",
+    "PublishedAnnouncements": "Published announcements",
+	"Login": "Login",
+    "Logout": "Logout",
+    "Password": "Password",
+    "CreatedBy": "Created by",
+    "Impressum": "Impressum",
+    "PrivacyPolicy": "Privacy Policy",
+    "AcceptPrivacyPolicy": "I accept the privacy policy"
+}

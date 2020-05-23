@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html lang="{{.Translation.Language}}">
+
+<head>
+  <title>AnnouncementGo!</title>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow"/>
+  <meta name="author" content="Marcus Soll"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="author" href="https://msoll.eu/">
+  <link rel="stylesheet" href="/css/announcementgo.css">
+  <link rel="icon" type="image/vnd.microsoft.icon" href="/static/favicon.ico">
+</head>
+
+<body>
+  <header>
+    <div style="margin-left: 1%">
+      AnnouncementGo!
+    </div>
+  </header>
+
+  {{if .Message}}
+  <div class="message">
+    <p>{{.Message}}</p>
+  </div>
+  {{end}}
+
+  <div>
+    <h1>{{.ShortDescription}}</h1>
+
+    <form action="/{{.Key}}/logout" target="_self" method="POST">
+      <p><input type="submit" value="{{.Translation.Logout}}"></p>
+    </form>
+
+    <form id="publish" method="POST">
+      <input type="hidden" name="target" value="publish">
+      <h2>{{.Translation.Subject}}</h2>
+      <p><input class="widthtextarea" type="text" name="subject" placeholder="{{.Translation.Subject}}" required></p>
+      <h2>{{.Translation.Message}}</h2>
+      <textarea name="message" rows="10" form="publish" placeholder="{{.Translation.Message}}" required></textarea>
+      <p><p><input type="checkbox" id="dsgvo_publish" name="dsgvo" required><label for=dsgvo_publish>{{.Translation.AcceptPrivacyPolicy}}</label></p></p>
+      <p><input type="submit" value="{{.Translation.PublishAnnouncement}}"></p>
+    </form>
+  </div>
+
+  {{if .Admin}}
+  {{range $i, $e := .PluginConfig}}
+  <div {{if even $i}}class="even" {{else}}class="odd"{{end}}>
+    {{$e}}
+  </div>
+  {{end}}
+  {{end}}
+
+  <footer>
+    <div>
+      {{.Translation.CreatedBy}} <a href="https://msoll.eu/"><u>Marcus Soll</u></a> - <a href="/impressum.html"><u>{{.Translation.Impressum}}</u></a> - <a href="/dsgvo.html"><u>{{.Translation.PrivacyPolicy}}</u></a>
+    </div>
+  </footer>
+</body>
+
+</html>
