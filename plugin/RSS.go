@@ -68,6 +68,7 @@ func rssFactory(key, shortDescription string) (registry.Plugin, error) {
 type rss struct {
 	NumberShown int
 	Cache       []byte
+	Link        string
 
 	l                     *sync.Mutex
 	key, shortDescription string
@@ -82,7 +83,8 @@ func (r *rss) GetConfig() template.HTML {
 	<p id="RSS_path"></p>
 	<form method="POST">
 	<input type="hidden" name="target" value="RSS">
-	<p><label for="RSS_items">Number Items:</label><input type="number" id="RSS_items" name="items" min="0" step="1" value="%d" required></p>
+	<p><label for="RSS_items">Number Items: </label><input type="number" id="RSS_items" name="items" min="0" step="1" value="%d" required></p>
+	<p><label for="RSS_link">Link:</label> <input type="text" id="RSS_link" name="link" value="%s"></p>
 	<p><input type="submit" value="Update"></p>
 	</form>
 
@@ -94,7 +96,7 @@ func (r *rss) GetConfig() template.HTML {
 	t.appendChild(link)
 	</script>
 	`
-	config = fmt.Sprintf(config, r.NumberShown)
+	config = fmt.Sprintf(config, r.NumberShown, template.HTMLEscapeString(r.Link))
 	return template.HTML(config)
 }
 
@@ -119,6 +121,9 @@ func (r *rss) ProcessConfigChange(req *http.Request) error {
 	if i < 0 {
 		return fmt.Errorf("number %d is smaller than 0", i)
 	}
+
+	r.Link = req.Form.Get("link")
+
 	r.l.Lock()
 	r.NumberShown = i
 	r.l.Unlock()
@@ -161,7 +166,7 @@ func (r *rss) update() {
 	feed := &feeds.Feed{
 		Title:       r.shortDescription,
 		Description: r.shortDescription,
-		Link:        &feeds.Link{},
+		Link:        &feeds.Link{Href: r.Link},
 		Author:      &feeds.Author{Name: "AnnouncementGo!"},
 		Updated:     time.Now(),
 	}
