@@ -76,7 +76,7 @@ const simpleSendMailConfig = `
 {{end}}
 <form method="POST">
 	<input type="hidden" name="target" value="SimpleSendMail">
-	<p><input id="SimpleSendMail_prefix" type="text" name="prefix" value="{{.Prefix}}" placeholder="prefix" required> <label for="SimpleSendMail_prefix">subject prefix</label></p>
+	<p><input id="SimpleSendMail_prefix" type="text" name="prefix" value="{{.Prefix}}" placeholder="prefix"> <label for="SimpleSendMail_prefix">subject prefix</label></p>
 	<p><input id="SimpleSendMail_from" type="text" name="from" value="{{.From}}" placeholder="from" required> <label for="SimpleSendMail_from">from</label></p>
 	<p><input id="SimpleSendMail_to" type="text" name="to" value="{{.To}}" placeholder="to" required> <label for="SimpleSendMail_to">to (seperate by comma)</label></p>
 	<p><input id="SimpleSendMail_server" type="text" name="server" value="{{.Server}}" placeholder="server" required> <label for="SimpleSendMail_server">SMTP server</label></p>
