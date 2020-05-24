@@ -17,13 +17,14 @@ package helper
 
 import (
 	"crypto/rand"
-	"crypto/sha512"
 	"encoding/base32"
 
 	"golang.org/x/crypto/argon2"
 )
 
-var passwordSalt = make([]byte, sha512.Size)
+const passowrdEncodedLength = 33
+
+var passwordSalt = make([]byte, passowrdEncodedLength)
 
 func init() {
 	_, err := rand.Read(passwordSalt)
@@ -33,6 +34,6 @@ func init() {
 }
 
 func EncodePassword(pw string) string {
-	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, 33)
+	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, passowrdEncodedLength)
 	return base32.StdEncoding.EncodeToString(key)
 }
