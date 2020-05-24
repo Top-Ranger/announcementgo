@@ -38,6 +38,7 @@ type announcementTemplateStruct struct {
 	ShortDescription string
 	PluginConfig     []template.HTML
 	Translation      translation.Translation
+	Errors           []string
 }
 
 func init() {

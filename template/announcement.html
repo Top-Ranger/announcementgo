@@ -19,6 +19,12 @@
     </div>
   </header>
 
+  {{range $i, $e := .Errors}}
+  <div class="error">
+    <p>{{$e}}</p>
+  </div>
+  {{end}}
+
   {{if .Message}}
   <div class="message">
     <p>{{.Message}}</p>

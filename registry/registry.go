@@ -38,7 +38,7 @@ func (a AlreadyRegisteredError) Error() string {
 
 // PluginFactory represents a function to generate a new Plugin.
 // The Plugin loads its configuration from the DataSafe.
-type PluginFactory func(key, shortDescription string) (Plugin, error)
+type PluginFactory func(key, shortDescription string, errorChannel chan string) (Plugin, error)
 
 // Plugin represents an announcement plugin.
 // All methods must be save to use in parallel.

@@ -1,5 +1,6 @@
 :root {
     --primary-colour: #DDE211;
+    --error-colour: #B90E68;
     --contra-light: #3E1C9C;
     --contra-dark: #200960;
     --table-hover: #FAFE6B;
@@ -71,6 +72,19 @@ textarea {
 }
 
 .message p {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.error {
+    background-color: var(--error-colour);
+    color: white;
+    font-size: x-large;
+    padding-left: 1%;
+    padding-right: 1%;
+}
+
+.error p {
     padding-top: 0.5em;
     padding-bottom: 0.5em;
 }

@@ -20,6 +20,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"net/mail"
 	"net/smtp"
@@ -31,7 +32,6 @@ import (
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/domodwyer/mailyak"
-	"github.com/go-acme/lego/log"
 )
 
 func init() {
@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-func simpleSendMailFactory(key, shortDescription string) (registry.Plugin, error) {
+func simpleSendMailFactory(key, shortDescription string, errorChannel chan string) (registry.Plugin, error) {
 	s := new(simpleSendMail)
 	b, err := registry.CurrentDataSafe.GetConfig(key, "SimpleSendMail")
 	if err != nil {
@@ -63,6 +63,7 @@ func simpleSendMailFactory(key, shortDescription string) (registry.Plugin, error
 	}
 	s.l = new(sync.Mutex)
 	s.key = key
+	s.e = errorChannel
 
 	return s, nil
 }
@@ -110,6 +111,7 @@ type simpleSendMail struct {
 
 	l   *sync.Mutex
 	key string
+	e   chan string
 }
 
 func (s simpleSendMail) verify() bool {
@@ -240,7 +242,10 @@ func (s *simpleSendMail) NewAnnouncement(a registry.Announcement, id string) {
 	defer s.l.Unlock()
 
 	if !s.verify() {
-		log.Printf("SimpleSendMail (%s): no valid configuration, can not send announcement (%s)", s.key, a.Header)
+		em := fmt.Sprintf("SimpleSendMail (%s): no valid configuration, can not send announcement (%s)", s.key, a.Header)
+		log.Println(em)
+		s.e <- em
+		return
 	}
 
 	mail := mailyak.New(fmt.Sprint(s.SMTPServer, ":", strconv.Itoa(s.SMTPServerPort)), smtp.PlainAuth("", s.SMTPUser, s.SMTPPassword, s.SMTPServer))
@@ -266,6 +271,8 @@ func (s *simpleSendMail) NewAnnouncement(a registry.Announcement, id string) {
 	mail.HTML().Set(string(helper.Format([]byte(a.Message))))
 	err := mail.Send()
 	if err != nil {
-		log.Printf("SimpleSendMail (%s): error while sending announcement (%s): %s", s.key, a.Header, err.Error())
+		em := fmt.Sprintf("SimpleSendMail (%s): error while sending announcement (%s): %s", s.key, a.Header, err.Error())
+		log.Println(em)
+		s.e <- em
 	}
 }

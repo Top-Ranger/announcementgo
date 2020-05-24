@@ -25,8 +25,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/Top-Ranger/announcementgo/counter"
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"
@@ -44,6 +46,8 @@ type announcement struct {
 	PasswordUser     []string
 
 	plugins []registry.Plugin
+	errors  []string
+	l       *sync.Mutex
 }
 
 // LoadAnnouncements loads all announcements in a path
@@ -79,6 +83,12 @@ func LoadAnnouncements(path string) error {
 }
 
 func (a *announcement) Initialise() error {
+	a.l = new(sync.Mutex)
+	a.l.Lock()
+	defer a.l.Unlock()
+
+	errorChannel := make(chan string, 100)
+
 	if a.Key == "" {
 		return fmt.Errorf("invalid key")
 	}
@@ -103,7 +113,7 @@ func (a *announcement) Initialise() error {
 		if !ok {
 			return fmt.Errorf("announcement: unknown plugin %s", a.Plugins[i])
 		}
-		p, err := pf(a.Key, a.ShortDescription)
+		p, err := pf(a.Key, a.ShortDescription, errorChannel)
 		if err != nil {
 			return fmt.Errorf("announcement: plugin %s has error %w", a.Plugins[i], err)
 		}
@@ -158,12 +168,16 @@ func (a *announcement) Initialise() error {
 		// Process Request
 		switch r.Method {
 		case http.MethodGet:
+			a.l.Lock()
 			td := announcementTemplateStruct{
 				Key:              a.Key,
 				Admin:            admin,
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
+				Errors:           a.errors,
 			}
+			a.errors = nil
+			a.l.Unlock()
 			if admin {
 				for i := range a.plugins {
 					td.PluginConfig = append(td.PluginConfig, a.plugins[i].GetConfig())
@@ -349,6 +363,19 @@ func (a *announcement) Initialise() error {
 		return err
 	}
 
+	go announcemetWorker(a, errorChannel)
+
 	log.Println("announcement: sucessfully loaded", a.Key)
 	return nil
+}
+
+func announcemetWorker(a *announcement, errorChannel chan string) {
+	for {
+		e := <-errorChannel
+		counter.StartProcess()
+		a.l.Lock()
+		a.errors = append(a.errors, e)
+		a.l.Unlock()
+		counter.EndProcess()
+	}
 }

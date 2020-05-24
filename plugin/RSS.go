@@ -39,7 +39,7 @@ func init() {
 	}
 }
 
-func rssFactory(key, shortDescription string) (registry.Plugin, error) {
+func rssFactory(key, shortDescription string, errorChannel chan string) (registry.Plugin, error) {
 	r := new(rss)
 	b, err := registry.CurrentDataSafe.GetConfig(key, "RSS")
 	if err != nil {
@@ -62,6 +62,8 @@ func rssFactory(key, shortDescription string) (registry.Plugin, error) {
 		rw.Write(r.Cache)
 	})
 
+	r.e = errorChannel
+
 	return r, nil
 }
 
@@ -72,6 +74,7 @@ type rss struct {
 
 	l                     *sync.Mutex
 	key, shortDescription string
+	e                     chan string
 }
 
 func (r *rss) GetConfig() template.HTML {
@@ -145,7 +148,9 @@ func (r *rss) update() {
 	an, err := registry.CurrentDataSafe.GetAllAnnouncements(r.key)
 
 	if err != nil {
-		log.Println("rss:", err)
+		em := fmt.Sprintln("rss:", err)
+		log.Println(em)
+		r.e <- em
 		// Try again later
 		go func() {
 			time.Sleep(15 * time.Minute)
@@ -190,10 +195,14 @@ func (r *rss) update() {
 	enc := gob.NewEncoder(&config)
 	err = enc.Encode(r)
 	if err != nil {
-		log.Println("feed:", err)
+		em := fmt.Sprintln("rss:", err)
+		log.Println(em)
+		r.e <- em
 	}
 	err = registry.CurrentDataSafe.SetConfig(r.key, "RSS", config.Bytes())
 	if err != nil {
-		log.Println("feed:", err)
+		em := fmt.Sprintln("rss:", err)
+		log.Println(em)
+		r.e <- em
 	}
 }
