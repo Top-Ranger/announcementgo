@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/Top-Ranger/announcementgo/counter"
+	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"
 	"github.com/gorilla/feeds"
@@ -83,11 +84,12 @@ func (r *rss) GetConfig() template.HTML {
 
 	config := `
 	<h1>RSS</h1>
+	%s
 	<p id="RSS_path"></p>
 	<form method="POST">
 	<input type="hidden" name="target" value="RSS">
-	<p><label for="RSS_items">Number Items: </label><input type="number" id="RSS_items" name="items" min="0" step="1" value="%d" required></p>
-	<p><label for="RSS_link">Link:</label> <input type="text" id="RSS_link" name="link" value="%s"></p>
+	<p><input type="number" id="RSS_items" name="items" min="0" step="1" value="%d" required> <label for="RSS_items">number items</label></p>
+	<p><input type="text" id="RSS_link" name="link" value="%s"> <label for="RSS_link">link</label></p>
 	<p><input type="submit" value="Update"></p>
 	</form>
 
@@ -99,7 +101,7 @@ func (r *rss) GetConfig() template.HTML {
 	t.appendChild(link)
 	</script>
 	`
-	config = fmt.Sprintf(config, r.NumberShown, template.HTMLEscapeString(r.Link))
+	config = fmt.Sprintf(config, helper.ConfigValid, r.NumberShown, template.HTMLEscapeString(r.Link))
 	return template.HTML(config)
 }
 

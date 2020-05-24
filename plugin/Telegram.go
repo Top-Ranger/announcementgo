@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Top-Ranger/announcementgo/counter"
+	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"gopkg.in/tucnak/telebot.v2"
 )
@@ -59,11 +60,7 @@ func telegramFactory(key, shortDescription string, errorChannel chan string) (re
 
 const telegramConfig = `
 <h1>Telegram</h1>
-{{if .Valid}}
-<h1 style="color: green;">&#9745; configuration valid</h1>
-{{else}}
-<h1 style="color: red;">&#9746; configuration not valid</h1>
-{{end}}
+{{.ConfigValidFragment}}
 <p>{{.UserNumber}} users</p>
 <form method="POST">
 	<input type="hidden" name="target" value="Telegram">
@@ -75,9 +72,10 @@ const telegramConfig = `
 var telegramConfigTemplate *template.Template
 
 type telegramConfigTemplateStruct struct {
-	Valid      bool
-	Token      string
-	UserNumber int
+	Valid               bool
+	ConfigValidFragment template.HTML
+	Token               string
+	UserNumber          int
 }
 
 type telegram struct {
@@ -192,6 +190,10 @@ func (t *telegram) GetConfig() template.HTML {
 		Valid:      t.bot != nil,
 		Token:      t.Token,
 		UserNumber: len(t.Targets),
+	}
+	td.ConfigValidFragment = helper.ConfigInvalid
+	if td.Valid {
+		td.ConfigValidFragment = helper.ConfigValid
 	}
 	var buf bytes.Buffer
 	err := telegramConfigTemplate.Execute(&buf, td)

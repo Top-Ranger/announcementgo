@@ -70,11 +70,7 @@ func simpleSendMailFactory(key, shortDescription string, errorChannel chan strin
 
 const simpleSendMailConfig = `
 <h1>SimpleSendMail</h1>
-{{if .Valid}}
-<h1 style="color: green;">&#9745; configuration valid</h1>
-{{else}}
-<h1 style="color: red;">&#9746; configuration not valid</h1>
-{{end}}
+{{.ConfigValidFragment}}
 <form method="POST">
 	<input type="hidden" name="target" value="SimpleSendMail">
 	<p><input id="SimpleSendMail_prefix" type="text" name="prefix" value="{{.Prefix}}" placeholder="prefix"> <label for="SimpleSendMail_prefix">subject prefix</label></p>
@@ -91,13 +87,14 @@ const simpleSendMailConfig = `
 var simpleSendMailConfigTemplate *template.Template
 
 type simpleSendMailConfigTemplateStruct struct {
-	Valid  bool
-	Prefix string
-	From   string
-	To     string
-	Server string
-	Port   int
-	User   string
+	Valid               bool
+	ConfigValidFragment template.HTML
+	Prefix              string
+	From                string
+	To                  string
+	Server              string
+	Port                int
+	User                string
 }
 
 type simpleSendMail struct {
@@ -157,6 +154,10 @@ func (s simpleSendMail) GetConfig() template.HTML {
 		Server: s.SMTPServer,
 		Port:   s.SMTPServerPort,
 		User:   s.SMTPUser,
+	}
+	td.ConfigValidFragment = helper.ConfigInvalid
+	if td.Valid {
+		td.ConfigValidFragment = helper.ConfigValid
 	}
 	tos := make([]string, len(s.To))
 	for i := range s.To {
