@@ -16,10 +16,11 @@
 package helper
 
 import (
-	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base32"
+
+	"golang.org/x/crypto/argon2"
 )
 
 var passwordSalt = make([]byte, sha512.Size)
@@ -32,7 +33,6 @@ func init() {
 }
 
 func EncodePassword(pw string) string {
-	h := hmac.New(sha512.New, passwordSalt)
-	h.Write([]byte(pw))
-	return base32.StdEncoding.EncodeToString(h.Sum(nil))
+	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, 33)
+	return base32.StdEncoding.EncodeToString(key)
 }
