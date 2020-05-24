@@ -8,10 +8,13 @@ Für den sicheren und stabilen Betrieb der Website werden technische Daten sowie
 
 ## Benachrichtigung erstellen
 
-Wenn Sie Benachrichtigungen erstellen, so werden die so erstellten Daten auf Grundlage ihrer Einwilligung nach DSGVO Art. 6 gespeichert, veröffentlicht und an mögliche Empfänger (also dritte Personen) weitergeleitet. Wir haben keine Möglichkeit zu überprüfen, wie diese Dritten die Daten weiterverwenden. Mit dem Erstellen der Benachrichtigung stimmen Sie zu, dass Ihre Daten auf diesem Weg verwendet und geteilt werden.
+Wenn Sie Benachrichtigungen erstellen, so werden die so erstellten Daten auf Grundlage ihrer Einwilligung nach DSGVO Art. 6 bzw. auf Grund der Verarbeitung für die Erfüllung eines Vertrags nach DSGVO Art. 6 gespeichert, veröffentlicht und an mögliche Empfänger (also dritte Personen) weitergeleitet. Wir haben keine Möglichkeit zu überprüfen, wie diese Dritten die Daten weiterverwenden. Mit dem Erstellen der Benachrichtigung stimmen Sie zu, dass Ihre Daten auf diesem Weg verwendet und geteilt werden.
+
+Sollten Sie eine einen Benachrichtigungsweg konfigurieren, so werden die von Ihnen eingegebenen Daten auf Grund ihrer Einwilligung nach DSGVO Art. 6 bzw. auf Grund der Verarbeitung für die Erfüllung eines Vertrags nach DSGVO Art. 6 gespeichert. Diese Daten werden nicht mit Dritten geteilt, es sei denn, dies ist für die Benutzung des Benachrichtigungswegs unabdingbar (z.B. werden Benutzernamen und Passwort an den Zielservice weitergeleitet).
 
 ## Sich für eine Benachrichtigung eintragen
-Wenn sie sich entscheiden, sich für eine Benachrichtigung einzutragen, so werden ihre Kontaktinformationen auf Grundlage ihrer Einwilligung nach DSGVO Art. 6 gespeichert und verarbeitet. Diese Daten sind von den Erstellern der Benachrichtigung einsehbar, werden aber ansonsten nicht an Dritte geteilt. Durch ein Abmelden der Benachrichtigung werden diese Daten gelöscht.
+
+Wenn sie sich entscheiden, sich für eine Benachrichtigung einzutragen, so werden ihre Kontaktinformationen auf Grundlage ihrer Einwilligung nach DSGVO Art. 6  bzw. auf Grund der Verarbeitung für die Erfüllung eines Vertrags nach DSGVO Art. 6 gespeichert und verarbeitet. Diese Daten sind von den Erstellern der Benachrichtigung einsehbar, werden aber ansonsten nicht an Dritte geteilt. Durch ein Abmelden der Benachrichtigung werden diese Daten gelöscht.
 
 Um einem Missbrauch zu verhindern kann es vorkommen, dass ihre Daten inklusive Kontaktdaten (auch z.B. nach einer Ablemdung) anonymisiert so abgespeichert werden, dass sich die Daten nach heutigem Stand nie wieder herstellen lassen (technisch: als *Hash mit Salt* gespeichert. Dies erfolgt auf Grund von berechtigten Interessen des Verantwortlichen (DSGVO Art. 6). Es besteht keine Möglichkeit, daraus wieder die Orginaldaten zu bekommen.
 
