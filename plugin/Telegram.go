@@ -58,7 +58,7 @@ func telegramFactory(key, shortDescription string, errorChannel chan string) (re
 }
 
 const telegramConfig = `
-<h1>SimpleSendMail</h1>
+<h1>Telegram</h1>
 {{if .Valid}}
 <h1 style="color: green;">&#9745; configuration valid</h1>
 {{else}}
