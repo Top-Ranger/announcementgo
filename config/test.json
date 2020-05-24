@@ -1,7 +1,7 @@
 {
     "Key": "test",
     "ShortDescription": "test announcement",
-	"Plugins": ["RSS", "SimpleSendMail"],
+	"Plugins": ["RSS", "SimpleSendMail", "Telegram"],
 	"PasswordAdmin": ["admin"],
 	"PasswordUser": ["test"]
 }

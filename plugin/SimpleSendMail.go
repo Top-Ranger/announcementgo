@@ -71,9 +71,9 @@ func simpleSendMailFactory(key, shortDescription string, errorChannel chan strin
 const simpleSendMailConfig = `
 <h1>SimpleSendMail</h1>
 {{if .Valid}}
-<h1 style="color: green;">&#9745; configuration valid<h1>
+<h1 style="color: green;">&#9745; configuration valid</h1>
 {{else}}
-<h1 style="color: red;">&#9746; configuration not valid<h1>
+<h1 style="color: red;">&#9746; configuration not valid</h1>
 {{end}}
 <form method="POST">
 	<input type="hidden" name="target" value="SimpleSendMail">
