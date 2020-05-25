@@ -179,9 +179,10 @@ func (r *rss) update() {
 	}
 
 	for i := 0; i < len(an); i++ {
+		m := helper.Format([]byte(an[i].Message))
 		feed.Items = append(feed.Items, &feeds.Item{
 			Title:       an[i].Header,
-			Description: an[i].Message,
+			Description: string(m),
 			Link:        &feeds.Link{},
 			Created:     an[i].Time,
 		})
