@@ -458,7 +458,7 @@ const registerMailConfig = `
 	<p><input id="RegisterMail_rate" type="number" min="0" step="1" name="rate" value="{{.RateLimit}}" placeholder="rate" required> <label for="RegisterMail_rate">rate limit (per minute)</label></p>
 	<p><input id="RegisterMail_registermailtext" type="text" name="registermailtext" value="{{.RegisterMailText}}" placeholder="register mail text" required> <label for="RegisterMail_registermailtext">text for initial register confirmation mail</label></p>
 	<p><input id="RegisterMail_unregisterlinktext" type="text" name="unregisterlinktext" value="{{.UnregisterLinkText}}" placeholder="unregister link text" required> <label for="RegisterMail_unregisterlinktext">text displayed before unregister link on every mail</label></p>
-	<p><input id="RegisterMail_registerpassword" type="text" name="registerpassword" value="{{.RegisterPassword}}" placeholder="register password" required> <label for="RegisterMail_registerpassword">password required for registering (leave empty for no password)</label></p>
+	<p><input id="RegisterMail_registerpassword" type="text" name="registerpassword" value="{{.RegisterPassword}}" placeholder="register password"> <label for="RegisterMail_registerpassword">password required for registering (leave empty for no password)</label></p>
 	<p><input id="RegisterMail_thisserver" type="text" name="thisserver" value="" placeholder="server" required readonly> <label for="RegisterMail_thisserver">this server</label></p>
 	<p><input type="submit" value="Update"></p>
 	<details>
