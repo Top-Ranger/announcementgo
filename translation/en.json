@@ -15,7 +15,7 @@
     "RegisterMailRegister": "Register your mail address to get announcements",
     "RegisterMailRegisterCaptchaFailure": "Captcha verification failed - please try again",
     "RegisterMailRegisterNow": "register now",
-	"RegisterMailRegisterSuccess": "Success. You should have received a mail containing a verification link (might take a few minutes). Please click it.",
+	"RegisterMailRegisterSuccess": "Success. Soon, you should receive a mail containing a verification link (might take a few minutes). Please click it.",
     "RegisterMailValidationSuccess": "Validation succeeded. You should now get announcements.",
     "RegisterMailUnregister": "Unsubscribe from announcements",
     "RegisterMailUnregisterSuccessful": "You are unsubscribed. You will not receive any announcements anymore."
