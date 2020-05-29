@@ -16,7 +16,6 @@
 package counter
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -42,7 +41,6 @@ func EndProcess() {
 func WaitProcesses() {
 	for {
 		processCountMutex.Lock()
-		fmt.Println(processCount)
 		r := processCount == 0
 		processCountMutex.Unlock()
 		if r {

@@ -95,7 +95,7 @@ func (r *rss) GetConfig() template.HTML {
 
 	<script>
 	var link = document.createElement("A");
-	link.href = document.location.protocol + document.location.pathname +  "/RSS/feed.rss";
+	link.href = document.location.href +  "/RSS/feed.rss";
 	link.textContent = link.href;
 	var t = document.getElementById("RSS_path");
 	t.appendChild(link)

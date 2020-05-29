@@ -31,6 +31,13 @@ func Hash(data []byte) (hash, salt []byte, err error) {
 	return
 }
 
+func HashForSalt(data, salt []byte) (hash []byte) {
+	h := hmac.New(sha512.New, salt)
+	h.Write(data)
+	hash = h.Sum([]byte("sha512:"))
+	return
+}
+
 func VerifyHash(data, hash, salt []byte) bool {
 	h := hmac.New(sha512.New, salt)
 	h.Write(data)
