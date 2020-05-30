@@ -18,5 +18,6 @@
 	"RegisterMailRegisterSuccess": "Registrierung erfolgreich. Sie sollten in Kürze eine Mail mit einem Verifizierungslink bekommen (kann einige Minuten dauern). Bitte klicken Sie auf dem Link, um die Registrierung abzuschließen.",
     "RegisterMailValidationSuccess": "Registrierung vollständig. Sie sollten ab jetzt Benachrichtigungen erhalten.",
     "RegisterMailUnregister": "Benachrichtigungen nicht mehr erhalten",
-    "RegisterMailUnregisterSuccessful": "Sie werden keine Benachrichtigungen mehr erhalten."
+    "RegisterMailUnregisterSuccessful": "Sie werden keine Benachrichtigungen mehr erhalten.",
+    "RegisterMailRegistrationClosed": "Die Registrierung ist nicht geöffnet.s"
 }

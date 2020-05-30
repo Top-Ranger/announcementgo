@@ -18,5 +18,6 @@
 	"RegisterMailRegisterSuccess": "Success. Soon, you should receive a mail containing a verification link (might take a few minutes). Please click it.",
     "RegisterMailValidationSuccess": "Validation succeeded. You should now get announcements.",
     "RegisterMailUnregister": "Unsubscribe from announcements",
-    "RegisterMailUnregisterSuccessful": "You are unsubscribed. You will not receive any announcements anymore."
+    "RegisterMailUnregisterSuccessful": "You are unsubscribed. You will not receive any announcements anymore.",
+    "RegisterMailRegistrationClosed": "Registration is closed."
 }

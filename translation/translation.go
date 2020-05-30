@@ -49,6 +49,7 @@ type Translation struct {
 	RegisterMailValidationSuccess      string
 	RegisterMailUnregister             string
 	RegisterMailUnregisterSuccessful   string
+	RegisterMailRegistrationClosed     string
 }
 
 const defaultLanguage = "en"

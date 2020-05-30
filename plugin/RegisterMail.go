@@ -99,6 +99,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		tl := translation.GetDefaultTranslation()
 
+		if !r.RegistrationOpen {
+			t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
 		switch req.Method {
 		case http.MethodGet:
 			id, c, err := captcha.GetStringsTimed(time.Now())
@@ -373,6 +379,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		tl := translation.GetDefaultTranslation()
 
+		if !r.RegistrationOpen {
+			t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
 		err := req.ParseForm()
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
@@ -459,6 +471,7 @@ const registerMailConfig = `
 	<p><input id="RegisterMail_registermailtext" type="text" name="registermailtext" value="{{.RegisterMailText}}" placeholder="register mail text" required> <label for="RegisterMail_registermailtext">text for initial register confirmation mail</label></p>
 	<p><input id="RegisterMail_unregisterlinktext" type="text" name="unregisterlinktext" value="{{.UnregisterLinkText}}" placeholder="unregister link text" required> <label for="RegisterMail_unregisterlinktext">text displayed before unregister link on every mail</label></p>
 	<p><input id="RegisterMail_registerpassword" type="text" name="registerpassword" value="{{.RegisterPassword}}" placeholder="register password"> <label for="RegisterMail_registerpassword">password required for registering (leave empty for no password)</label></p>
+	<p><input id="RegisterMail_open" type="checkbox" name="open" {{if .RegistrationOpen}}checked{{end}}> <label for="RegisterMail_open">registration open</label></p>
 	<p><input id="RegisterMail_thisserver" type="text" name="thisserver" value="" placeholder="server" required readonly> <label for="RegisterMail_thisserver">this server</label></p>
 	<p><input type="submit" value="Update"></p>
 	<details>
@@ -494,6 +507,7 @@ type registerMailConfigTemplateStruct struct {
 	RateLimit           int
 	RegisterMailText    string
 	UnregisterLinkText  string
+	RegistrationOpen    bool
 	RegisterPassword    string
 	KnownUser           []string
 }
@@ -567,6 +581,7 @@ type registerMail struct {
 	RegisterMailText   string
 	UnregisterLinkText string
 	RegisterPassword   string
+	RegistrationOpen   bool
 	ServerName         string
 	Queue              []*registerMailQueueObject
 
@@ -642,6 +657,7 @@ func (r registerMail) GetConfig() template.HTML {
 		RegisterMailText:   r.RegisterMailText,
 		UnregisterLinkText: r.UnregisterLinkText,
 		RegisterPassword:   r.RegisterPassword,
+		RegistrationOpen:   r.RegistrationOpen,
 	}
 
 	for i := range r.ToData {
@@ -722,6 +738,8 @@ func (r *registerMail) ProcessConfigChange(req *http.Request) error {
 	r.RegisterPassword = req.Form.Get("registerpassword")
 
 	r.ServerName = strings.TrimSuffix(req.Form.Get("thisserver"), "/")
+
+	r.RegistrationOpen = req.Form.Get("open") != ""
 
 	return r.save()
 }
