@@ -57,6 +57,11 @@ func init() {
 		panic(err)
 	}
 
+	registerMailDeleteSiteTemplate, err = template.New("registerMailDeleteSiteTemplate").Parse(registerMailDeleteSite)
+	if err != nil {
+		panic(err)
+	}
+
 	err = registry.RegisterPlugin(registerMailFactory, "RegisterMail")
 	if err != nil {
 		panic(err)
@@ -349,13 +354,141 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 							server.TextTemplate.Execute(rw, t)
 							return
 						}
+						t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					} else {
+						hash, err := base64.StdEncoding.DecodeString(r.ToData[i].Data)
+						if err != nil {
+							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+							rw.WriteHeader(http.StatusInternalServerError)
+							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+							server.TextTemplate.Execute(rw, t)
+							return
+						}
+						salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
+						if err != nil {
+							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+							rw.WriteHeader(http.StatusInternalServerError)
+							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+							server.TextTemplate.Execute(rw, t)
+							return
+						}
+						if helper.VerifyHash([]byte(mail), hash, salt) {
+							t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+							server.TextTemplate.Execute(rw, t)
+							return
+						}
 					}
-					t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+				}
+			}
+
+			rw.WriteHeader(http.StatusNotFound)
+			t := server.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+
+		default:
+			rw.WriteHeader(http.StatusMethodNotAllowed)
+			t := server.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+	})
+
+	server.AddHandle(key, "RegisterMail/delete.html", func(rw http.ResponseWriter, req *http.Request) {
+		counter.StartProcess()
+		r.l.Lock()
+		defer r.l.Unlock()
+		defer counter.EndProcess()
+
+		tl := translation.GetDefaultTranslation()
+
+		if !r.verify() {
+			rw.WriteHeader(http.StatusInternalServerError)
+			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
+		if _, admin := server.GetLogin(r.key, req); !admin {
+			rw.WriteHeader(http.StatusForbidden)
+			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
+		err := req.ParseForm()
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
+		switch req.Method {
+		case http.MethodGet:
+			td := registerMailDeleteSiteStruct{
+				Description: r.description,
+				Mail:        req.Form.Get("mail"),
+			}
+			var buf bytes.Buffer
+			err := registerMailDeleteSiteTemplate.Execute(&buf, td)
+			if err != nil {
+				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+				rw.WriteHeader(http.StatusInternalServerError)
+				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				server.TextTemplate.Execute(rw, t)
+				return
+			}
+			t := server.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
+
+		case http.MethodPost:
+			mail := req.Form.Get("mail")
+
+			if mail == "" {
+				rw.WriteHeader(http.StatusForbidden)
+				t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+				server.TextTemplate.Execute(rw, t)
+				return
+			}
+
+			for i := range r.ToData {
+				if !r.ToData[i].Hash && r.ToData[i].Data == mail {
+					salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
+					if err != nil {
+						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+						rw.WriteHeader(http.StatusInternalServerError)
+						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					}
+
+					hash := helper.HashForSalt([]byte(mail), salt)
+
+					// Make data valid
+					r.ToData[i].Data = base64.StdEncoding.EncodeToString(hash)
+					r.ToData[i].Hash = true
+
+					err = r.save()
+					if err != nil {
+						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+						rw.WriteHeader(http.StatusInternalServerError)
+						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					}
+					t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(strings.Join([]string{mail, "deleted."}, " "))), Translation: tl}
 					server.TextTemplate.Execute(rw, t)
 					return
 				}
 			}
 
+			rw.WriteHeader(http.StatusNotFound)
+			t := server.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
+			server.TextTemplate.Execute(rw, t)
+			return
 		default:
 			rw.WriteHeader(http.StatusMethodNotAllowed)
 			t := server.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
@@ -478,10 +611,11 @@ const registerMailConfig = `
 	<summary>Known users</summary>
 	<ul>
 	{{range $i, $e := .KnownUser}}
-	<li>{{$e}}</li>
+	<li>{{$e}} <a href="{{$.ThisServer}}/RegisterMail/delete.html?mail={{$e}}" target="_blank">🗑</a></li>
 	{{end}}
 	</ul>
 	</details>
+	<p></p>
 </form>
 
 <script>
@@ -510,6 +644,7 @@ type registerMailConfigTemplateStruct struct {
 	RegistrationOpen    bool
 	RegisterPassword    string
 	KnownUser           []string
+	ThisServer          string
 }
 
 var registerMailRegisterSiteTemplate *template.Template
@@ -556,7 +691,21 @@ type registerMailUnregisterSiteStruct struct {
 	Translation translation.Translation
 }
 
-//TODO: Delete
+var registerMailDeleteSiteTemplate *template.Template
+
+const registerMailDeleteSite = `
+<h1>{{.Description}}</h1>
+<p>Delete user</p>
+<form method="POST">
+   <p>E-Mail: <br> <input type="email" name="mail" value={{.Mail}} placeholder="e-mail" required readonly></p>
+   <p><input type="submit" value="Delete"></p>
+</form>
+`
+
+type registerMailDeleteSiteStruct struct {
+	Description string
+	Mail        string
+}
 
 type registerMailData struct {
 	Data string
@@ -658,6 +807,7 @@ func (r registerMail) GetConfig() template.HTML {
 		UnregisterLinkText: r.UnregisterLinkText,
 		RegisterPassword:   r.RegisterPassword,
 		RegistrationOpen:   r.RegistrationOpen,
+		ThisServer:         r.ServerName,
 	}
 
 	for i := range r.ToData {
