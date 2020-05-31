@@ -33,7 +33,6 @@ import (
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"
 	"github.com/Top-Ranger/announcementgo/translation"
-	"github.com/Top-Ranger/auth/data"
 )
 
 var knownKeys = make(map[string]bool)
@@ -130,27 +129,7 @@ func (a *announcement) Initialise() error {
 
 	err := server.AddHandle(a.Key, "", func(rw http.ResponseWriter, r *http.Request) {
 		// Test login
-		var loggedin bool
-		var admin bool
-
-		c := r.Cookies()
-		adminCookie := fmt.Sprintf("%s#admin", a.Key)
-		userCookie := fmt.Sprintf("%s#user", a.Key)
-		for i := range c {
-			if c[i].Name == userCookie {
-				b := data.VerifyStringsTimed(c[i].Value, c[i].Name, time.Now(), time.Duration(config.LoginMinutes)*time.Minute)
-				if b {
-					loggedin = true
-				}
-			}
-			if c[i].Name == adminCookie {
-				b := data.VerifyStringsTimed(c[i].Value, c[i].Name, time.Now(), time.Duration(config.LoginMinutes)*time.Minute)
-				if b {
-					loggedin = true
-					admin = true
-				}
-			}
-		}
+		loggedin, admin := server.GetLogin(a.Key, r)
 
 		if !loggedin {
 			td := loginTemplateStruct{
@@ -294,21 +273,13 @@ func (a *announcement) Initialise() error {
 
 		for i := range a.PasswordUser {
 			if password == a.PasswordUser[i] {
-				name := fmt.Sprintf("%s#user", a.Key)
-				auth, err := data.GetStringsTimed(time.Now(), name)
+				err := server.SetLoginCookie(a.Key, false, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)
 					t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
 					server.TextTemplate.Execute(rw, t)
 					return
 				}
-				cookie := http.Cookie{}
-				cookie.Name = name
-				cookie.Value = auth
-				cookie.MaxAge = 60 * config.LoginMinutes
-				cookie.SameSite = http.SameSiteLaxMode
-				cookie.HttpOnly = true
-				http.SetCookie(rw, &cookie)
 				http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 				return
 			}
@@ -316,21 +287,13 @@ func (a *announcement) Initialise() error {
 
 		for i := range a.PasswordAdmin {
 			if password == a.PasswordAdmin[i] {
-				name := fmt.Sprintf("%s#admin", a.Key)
-				auth, err := data.GetStringsTimed(time.Now(), name)
+				err := server.SetLoginCookie(a.Key, true, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)
 					t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
 					server.TextTemplate.Execute(rw, t)
 					return
 				}
-				cookie := http.Cookie{}
-				cookie.Name = name
-				cookie.Value = auth
-				cookie.MaxAge = 60 * config.LoginMinutes
-				cookie.SameSite = http.SameSiteLaxMode
-				cookie.HttpOnly = true
-				http.SetCookie(rw, &cookie)
 				http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 				return
 			}
@@ -345,18 +308,7 @@ func (a *announcement) Initialise() error {
 	}
 
 	err = server.AddHandle(a.Key, "logout", func(rw http.ResponseWriter, r *http.Request) {
-		cookie := http.Cookie{}
-		cookie.Name = fmt.Sprintf("%s#admin", a.Key)
-		cookie.Value = ""
-		cookie.MaxAge = -1
-		http.SetCookie(rw, &cookie)
-
-		cookie = http.Cookie{}
-		cookie.Name = fmt.Sprintf("%s#user", a.Key)
-		cookie.Value = ""
-		cookie.MaxAge = -1
-		http.SetCookie(rw, &cookie)
-
+		server.RemoveLoginCookie(a.Key, rw, r)
 		http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 	})
 	if err != nil {

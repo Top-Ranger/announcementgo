@@ -98,7 +98,7 @@ func main() {
 
 	registry.CurrentDataSafe = datasafe
 
-	err = server.InitialiseServer(server.ServerConfig{Address: config.Address, PathDSGVO: config.PathDSGVO, PathImpressum: config.PathImpressum})
+	err = server.InitialiseServer(server.Config{Address: config.Address, PathDSGVO: config.PathDSGVO, PathImpressum: config.PathImpressum, CookieTimeMinute: config.LoginMinutes})
 	if err != nil {
 		log.Panicln(err)
 	}

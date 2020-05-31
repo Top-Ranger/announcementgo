@@ -33,6 +33,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/counter"
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/translation"
+	"github.com/Top-Ranger/auth/data"
 )
 
 // TextTemplate is a simple template which only displays a text.
@@ -48,6 +49,7 @@ var impressum []byte
 
 var cachedFiles = make(map[string][]byte)
 var etagCompare string
+var cookieTime = 60
 
 var robottxt = []byte(`User-agent: *
 Disallow: /`)
@@ -70,20 +72,84 @@ type TextTemplateStruct struct {
 	Translation translation.Translation
 }
 
-// ServerConfig holds all server configuration.
-type ServerConfig struct {
-	Address       string
-	PathDSGVO     string
-	PathImpressum string
+// Config holds all server configuration.
+type Config struct {
+	Address          string
+	PathDSGVO        string
+	PathImpressum    string
+	CookieTimeMinute int
+}
+
+// SetLoginCookie creates a valid login cookie for the given key.
+func SetLoginCookie(key string, admin bool, rw http.ResponseWriter, r *http.Request) error {
+	name := fmt.Sprintf("%s#user", key)
+	if admin {
+		name = fmt.Sprintf("%s#admin", key)
+	}
+	auth, err := data.GetStringsTimed(time.Now(), name)
+	if err != nil {
+		return err
+	}
+	cookie := http.Cookie{}
+	cookie.Name = name
+	cookie.Value = auth
+	cookie.MaxAge = 60 * cookieTime
+	cookie.SameSite = http.SameSiteLaxMode
+	cookie.HttpOnly = true
+	http.SetCookie(rw, &cookie)
+	return nil
+}
+
+// RemoveLoginCookie removes all cookies for the given key.
+// Please note that if the user can recreate the cookies on his machine, he can still log in.
+func RemoveLoginCookie(key string, rw http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{}
+	cookie.Name = fmt.Sprintf("%s#admin", key)
+	cookie.Value = ""
+	cookie.MaxAge = -1
+	http.SetCookie(rw, &cookie)
+
+	cookie = http.Cookie{}
+	cookie.Name = fmt.Sprintf("%s#user", key)
+	cookie.Value = ""
+	cookie.MaxAge = -1
+	http.SetCookie(rw, &cookie)
+}
+
+// GetLogin returns whether the user has a valid login and whether he is administrator.
+func GetLogin(key string, r *http.Request) (loggedin, admin bool) {
+	c := r.Cookies()
+	adminCookie := fmt.Sprintf("%s#admin", key)
+	userCookie := fmt.Sprintf("%s#user", key)
+	for i := range c {
+		if c[i].Name == userCookie {
+			b := data.VerifyStringsTimed(c[i].Value, c[i].Name, time.Now(), time.Duration(cookieTime)*time.Minute)
+			if b {
+				loggedin = true
+				return
+			}
+		}
+		if c[i].Name == adminCookie {
+			b := data.VerifyStringsTimed(c[i].Value, c[i].Name, time.Now(), time.Duration(cookieTime)*time.Minute)
+			if b {
+				loggedin = true
+				admin = true
+				return
+			}
+		}
+	}
+	return
 }
 
 // InitialiseServer initialises the server. It needs to be called first before calling any other funtion of this package.
-func InitialiseServer(config ServerConfig) error {
+func InitialiseServer(config Config) error {
 	serverMutex.Lock()
 	defer serverMutex.Unlock()
 	if serverStarted {
 		return nil
 	}
+
+	cookieTime = config.CookieTimeMinute
 
 	// Guard to only initialise once
 	serverInitialised := true
