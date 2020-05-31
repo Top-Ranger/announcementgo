@@ -17,6 +17,7 @@ package plugin
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/gob"
 	"fmt"
 	"html/template"
@@ -224,6 +225,26 @@ func (s *simpleSendMail) ProcessConfigChange(r *http.Request) error {
 
 	if r.Form.Get("password") != "" {
 		s.SMTPPassword = r.Form.Get("password")
+	}
+
+	auth := smtp.PlainAuth("", s.SMTPUser, s.SMTPPassword, s.SMTPServer)
+	c, err := smtp.Dial(strings.Join([]string{s.SMTPServer, strconv.Itoa(s.SMTPServerPort)}, ":"))
+	if err != nil {
+		s.SMTPPassword = ""
+		return err
+	}
+	defer c.Close()
+
+	err = c.StartTLS(&tls.Config{ServerName: s.SMTPServer})
+	if err != nil {
+		s.SMTPPassword = ""
+		return err
+	}
+
+	err = c.Auth(auth)
+	if err != nil {
+		s.SMTPPassword = ""
+		return err
 	}
 
 	var buf bytes.Buffer

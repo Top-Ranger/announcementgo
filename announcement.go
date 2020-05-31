@@ -225,6 +225,7 @@ func (a *announcement) Initialise() error {
 						if err != nil {
 							log.Printf("announcement plugin config (%s): %s", a.Plugins[i], err.Error())
 							http.Redirect(rw, r, fmt.Sprintf("/%s?message=%s", a.Key, url.QueryEscape(err.Error())), http.StatusSeeOther)
+							return
 						}
 						http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 						return

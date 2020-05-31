@@ -17,6 +17,7 @@ package plugin
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/gob"
 	"fmt"
@@ -870,6 +871,26 @@ func (r *registerMail) ProcessConfigChange(req *http.Request) error {
 
 	if req.Form.Get("password") != "" {
 		r.SMTPPassword = req.Form.Get("password")
+	}
+
+	auth := smtp.PlainAuth("", r.SMTPUser, r.SMTPPassword, r.SMTPServer)
+	c, err := smtp.Dial(strings.Join([]string{r.SMTPServer, strconv.Itoa(r.SMTPServerPort)}, ":"))
+	if err != nil {
+		r.SMTPPassword = ""
+		return err
+	}
+	defer c.Close()
+
+	err = c.StartTLS(&tls.Config{ServerName: r.SMTPServer})
+	if err != nil {
+		r.SMTPPassword = ""
+		return err
+	}
+
+	err = c.Auth(auth)
+	if err != nil {
+		r.SMTPPassword = ""
+		return err
 	}
 
 	if req.Form.Get("rate") != "" {
