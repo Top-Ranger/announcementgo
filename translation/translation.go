@@ -42,6 +42,7 @@ type Translation struct {
 	Impressum                          string
 	PrivacyPolicy                      string
 	AcceptPrivacyPolicy                string
+	TelegramAnswerMessage              string
 	RegisterMailRegister               string
 	RegisterMailRegisterCaptchaFailure string
 	RegisterMailRegisterNow            string

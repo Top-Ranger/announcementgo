@@ -12,6 +12,7 @@
     "Impressum": "Impressum",
     "PrivacyPolicy": "Privacy Policy",
     "AcceptPrivacyPolicy": "I accept the privacy policy",
+    "TelegramAnswerMessage": "I'm sorry, but at the moment I can't respond to messages.",
     "RegisterMailRegister": "Register your mail address to get announcements",
     "RegisterMailRegisterCaptchaFailure": "Captcha verification failed - please try again",
     "RegisterMailRegisterNow": "register now",

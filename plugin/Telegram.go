@@ -29,6 +29,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/counter"
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
+	"github.com/Top-Ranger/announcementgo/translation"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
@@ -156,6 +157,36 @@ func (t *telegram) update() error {
 
 		t.bot.Handle(telebot.OnAddedToGroup, addedFunction)
 		t.bot.Handle("/start", addedFunction)
+
+		messageFunc := func(m *telebot.Message) {
+			counter.StartProcess()
+			defer counter.EndProcess()
+			t.l.Lock()
+
+			if !m.FromGroup() && !m.FromChannel() && !m.IsService() {
+				_, err = t.bot.Send(m.Chat, translation.GetDefaultTranslation().TelegramAnswerMessage, telebot.NoPreview)
+				if err != nil {
+					em := fmt.Sprintln("telegram:", err)
+					log.Println(em)
+					t.e <- em
+				}
+			}
+			t.l.Unlock()
+			addedFunction(m)
+		}
+
+		t.bot.Handle(telebot.OnText, messageFunc)
+		t.bot.Handle(telebot.OnPhoto, messageFunc)
+		t.bot.Handle(telebot.OnAudio, messageFunc)
+		t.bot.Handle(telebot.OnAnimation, messageFunc)
+		t.bot.Handle(telebot.OnDocument, messageFunc)
+		t.bot.Handle(telebot.OnSticker, messageFunc)
+		t.bot.Handle(telebot.OnVideo, messageFunc)
+		t.bot.Handle(telebot.OnVoice, messageFunc)
+		t.bot.Handle(telebot.OnVideoNote, messageFunc)
+		t.bot.Handle(telebot.OnContact, messageFunc)
+		t.bot.Handle(telebot.OnLocation, messageFunc)
+		t.bot.Handle(telebot.OnVenue, messageFunc)
 
 		t.bot.Handle(telebot.OnMigration, func(from, to int64) {
 			counter.StartProcess()
