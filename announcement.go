@@ -213,7 +213,7 @@ func (a *announcement) Initialise() error {
 					log.Println("announcement save:", err.Error())
 				}
 				for i := range a.plugins {
-					a.plugins[i].NewAnnouncement(an, id)
+					go a.plugins[i].NewAnnouncement(an, id)
 				}
 				http.Redirect(rw, r, fmt.Sprintf("/%s?message=%s", a.Key, url.QueryEscape(translation.GetDefaultTranslation().AnnouncementPublished)), http.StatusSeeOther)
 				return
