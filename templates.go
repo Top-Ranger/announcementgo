@@ -19,11 +19,13 @@ import (
 	"html/template"
 	"io/ioutil"
 
+	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/translation"
 )
 
 var loginTemplate *template.Template
 var announcementTemplate *template.Template
+var historyTemplate *template.Template
 
 type loginTemplateStruct struct {
 	Key              string
@@ -39,6 +41,13 @@ type announcementTemplateStruct struct {
 	PluginConfig     []template.HTML
 	Translation      translation.Translation
 	Errors           []string
+}
+
+type historyTemplateStruct struct {
+	Key              string
+	ShortDescription string
+	History          []registry.Announcement
+	Translation      translation.Translation
 }
 
 func init() {
@@ -62,6 +71,15 @@ func init() {
 		panic(err)
 	}
 	announcementTemplate, err = template.New("announcement").Funcs(funcMap).Parse(string(b))
+	if err != nil {
+		panic(err)
+	}
+
+	b, err = ioutil.ReadFile("template/history.html")
+	if err != nil {
+		panic(err)
+	}
+	historyTemplate, err = template.New("history").Funcs(funcMap).Parse(string(b))
 	if err != nil {
 		panic(err)
 	}

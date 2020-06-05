@@ -37,6 +37,7 @@
 
   <div>
     <h1>{{.ShortDescription}}</h1>
+    <h2><a href="/{{.Key}}/history.html">{{.Translation.History}}</a></h2>
 
     <form action="/{{.Key}}/logout" target="_self" method="POST">
       <p><input type="submit" value="{{.Translation.Logout}}"></p>

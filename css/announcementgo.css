@@ -97,6 +97,11 @@ textarea {
     background-color: whitesmoke;
 }
 
+.metadata {
+    font-size: small;
+    color: darkslategray;
+}
+
 table {
     border-collapse: collapse;
 }

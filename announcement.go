@@ -316,6 +316,36 @@ func (a *announcement) Initialise() error {
 		return err
 	}
 
+	err = server.AddHandle(a.Key, "history.html", func(rw http.ResponseWriter, r *http.Request) {
+		loggedin, _ := server.GetLogin(a.Key, r)
+		if !loggedin {
+			rw.WriteHeader(http.StatusForbidden)
+			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
+		h, err := registry.CurrentDataSafe.GetAllAnnouncements(a.Key)
+		if err != nil {
+			log.Printf("announcement history (%s): %s", a.Key, err.Error())
+			rw.WriteHeader(http.StatusInternalServerError)
+			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+			server.TextTemplate.Execute(rw, t)
+			return
+		}
+
+		td := historyTemplateStruct{
+			Key:              a.Key,
+			ShortDescription: a.ShortDescription,
+			History:          h,
+			Translation:      translation.GetDefaultTranslation(),
+		}
+		err = historyTemplate.Execute(rw, td)
+		if err != nil {
+			log.Printf("announcement history template (%s): %s", a.Key, err.Error())
+		}
+	})
+
 	go announcemetWorker(a, errorChannel)
 
 	log.Println("announcement: sucessfully loaded", a.Key)
