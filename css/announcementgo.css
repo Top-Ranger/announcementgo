@@ -133,3 +133,7 @@ pre {
 .centre {
     text-align: center;
 }
+
+.announcement-display {
+    white-space: pre-wrap;
+}

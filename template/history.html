@@ -28,7 +28,7 @@
   <div {{if even $i}}class="even" {{else}}class="odd"{{end}}>
     <details>
       <summary><strong>{{$e.Header}}</strong></summary>
-      {{$e.Message}}
+<div class="announcement-display">{{$e.Message}}</div>
       <p class="metadata">{{$e.Time}}</p>
     </details>
     <p></p>
