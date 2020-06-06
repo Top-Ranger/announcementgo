@@ -656,7 +656,7 @@ const registerMailRegisterSite = `
 <form method="POST">
    <input type="hidden" name="id" value="{{.CaptchaID}}">
    <p>E-Mail: <br> <input type="email" name="mail" placeholder="e-mail" required></p>
-   <p><strong>Captcha</strong> {{.Captcha}}<br> <input type="captcha" name="c" placeholder="captcha" required></p>
+   <p><strong>Captcha</strong> {{.Captcha}}<br> <input type="captcha" name="c" placeholder="captcha" required autocomplete="off"></p>
    {{if .RegisterPassword}}
    <p>{{.Translation.Password}} <br> <input type="password" name="rp" placeholder="{{.Translation.Password}}" required></p>
    {{end}}
