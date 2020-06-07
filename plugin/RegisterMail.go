@@ -921,7 +921,6 @@ func (r *registerMail) NewAnnouncement(a registry.Announcement, id string) {
 	r.l.Lock()
 	defer r.l.Unlock()
 
-	fmt.Printf("%+v", r)
 	for i := range r.ToData {
 		if r.ToData[i].Hash {
 			// This is no mail address - skip
