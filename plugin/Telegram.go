@@ -295,7 +295,14 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 			em := fmt.Sprintln("telegram:", err)
 			log.Println(em)
 			t.e <- em
-			remove[t.Targets[i]] = true
+			apierror, ok := err.(*telebot.APIError)
+			if !ok {
+				continue
+			}
+
+			if apierror.Code != 400 && apierror.Code != 500 {
+				remove[t.Targets[i]] = true
+			}
 			continue
 		}
 	}
