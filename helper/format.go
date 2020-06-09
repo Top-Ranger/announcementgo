@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/Top-Ranger/questiongo/helper"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
@@ -46,7 +45,7 @@ func Format(b []byte) template.HTML {
 	md := goldmark.New(goldmark.WithExtensions(extension.GFM), goldmark.WithRendererOptions(html.WithHardWraps()))
 	err := md.Convert(b, buf)
 	if err != nil {
-		return template.HTML(helper.SanitiseString(fmt.Sprintf("Error rendering markdown: %s", err.Error())))
+		return template.HTML(policy.Sanitize(fmt.Sprintf("Error rendering markdown: %s", err.Error())))
 	}
 
 	return template.HTML(policy.SanitizeBytes(buf.Bytes()))
