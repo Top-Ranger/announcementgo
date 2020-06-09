@@ -77,6 +77,9 @@ func telegramFactory(key, shortDescription string, errorChannel chan string) (re
 const telegramConfig = `
 <h1>Telegram</h1>
 {{.ConfigValidFragment}}
+{{if .URL}}
+<p>{{.URL}}</p>
+{{end}}
 <p>{{.UserNumber}} users</p>
 <form method="POST">
 	<input type="hidden" name="target" value="Telegram">
@@ -92,6 +95,7 @@ type telegramConfigTemplateStruct struct {
 	ConfigValidFragment template.HTML
 	Token               string
 	UserNumber          int
+	URL                 string
 }
 
 type telegram struct {
@@ -240,6 +244,9 @@ func (t *telegram) GetConfig() template.HTML {
 	td.ConfigValidFragment = helper.ConfigInvalid
 	if td.Valid {
 		td.ConfigValidFragment = helper.ConfigValid
+	}
+	if t.bot != nil {
+		td.URL = t.bot.URL
 	}
 	var buf bytes.Buffer
 	err := telegramConfigTemplate.Execute(&buf, td)

@@ -22,6 +22,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"sync"
 
@@ -76,6 +77,9 @@ func discordFactory(key, shortDescription string, errorChannel chan string) (reg
 const discordConfig = `
 <h1>Discord</h1>
 {{.ConfigValidFragment}}
+{{if .URL}}
+<p>{{.URL}}</p>
+{{end}}
 <p>{{.UserNumber}} users</p>
 <form method="POST">
 	<input type="hidden" name="target" value="Discord">
@@ -91,6 +95,7 @@ type discordConfigTemplateStruct struct {
 	ConfigValidFragment template.HTML
 	Token               string
 	UserNumber          string
+	URL                 string
 }
 
 type discord struct {
@@ -190,6 +195,14 @@ func (d *discord) GetConfig() template.HTML {
 	}
 
 	if d.bot != nil {
+		a, err := d.bot.Application("@me")
+		if err != nil {
+			em := fmt.Sprintln("discord:", err)
+			log.Println(em)
+			d.e <- em
+		} else {
+			td.URL = fmt.Sprintf("https://discord.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=2048", url.QueryEscape(a.ID))
+		}
 		g, err := d.bot.UserGuilds(100, "", "")
 		if err != nil {
 			em := fmt.Sprintln("discord:", err)
