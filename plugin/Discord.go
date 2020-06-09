@@ -209,7 +209,7 @@ func (d *discord) GetConfig() template.HTML {
 		td.ConfigValidFragment = helper.ConfigValid
 	}
 	var buf bytes.Buffer
-	err = discordConfigTemplate.Execute(&buf, td)
+	err := discordConfigTemplate.Execute(&buf, td)
 	if err != nil {
 		log.Printf("discord (%s): %s", d.key, err.Error())
 	}
