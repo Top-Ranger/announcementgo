@@ -241,6 +241,7 @@ func (t *telegram) GetConfig() template.HTML {
 		Valid:      t.bot != nil,
 		Token:      t.Token,
 		UserNumber: len(t.Targets),
+		URL:        "Create bot: https://core.telegram.org/bots#3-how-do-i-create-a-bot",
 	}
 	td.ConfigValidFragment = helper.ConfigInvalid
 	if td.Valid {

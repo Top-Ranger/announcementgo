@@ -192,6 +192,7 @@ func (d *discord) GetConfig() template.HTML {
 		Valid:      d.bot != nil,
 		Token:      d.Token,
 		UserNumber: "[not available]",
+		URL:        "Create bot: https://discord.com/developers/applications",
 	}
 
 	if d.bot != nil {
