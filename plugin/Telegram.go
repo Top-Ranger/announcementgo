@@ -22,6 +22,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -246,7 +247,7 @@ func (t *telegram) GetConfig() template.HTML {
 		td.ConfigValidFragment = helper.ConfigValid
 	}
 	if t.bot != nil {
-		td.URL = t.bot.URL
+		td.URL = fmt.Sprintf("https://t.me/%s", url.PathEscape(t.bot.Me.Username))
 	}
 	var buf bytes.Buffer
 	err := telegramConfigTemplate.Execute(&buf, td)
