@@ -16,8 +16,11 @@ go get -u ./...
 go build
 ./announcementgo
 
-A sample configration can be found at "./config.json".
-A sample configuration for announcement management can be found at "config/test.json"
+A sample server configration can be found at "./config.json".
+The configuration of the announcements is splitted in two parts: 
+   - The server admin can set passwords and allow plugins. A sample configuration for announcement management can be found at "config/test.json".
+   - The admin of an announcement page can configure the plugins through the website.
+(The user can only send announcements, but can neither configure plugins nor see the configration)
 
 AnnouncementGo! is licenced under Apache-2.0.
 
