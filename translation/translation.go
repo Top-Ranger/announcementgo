@@ -43,7 +43,7 @@ type Translation struct {
 	PrivacyPolicy                      string
 	AcceptPrivacyPolicy                string
 	History                            string
-	TelegramAnswerMessage              string
+	BotAnswerMessage                   string
 	RegisterMailRegister               string
 	RegisterMailRegisterCaptchaFailure string
 	RegisterMailRegisterNow            string

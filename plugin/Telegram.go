@@ -164,7 +164,7 @@ func (t *telegram) update() error {
 			t.l.Lock()
 
 			if !m.FromGroup() && !m.FromChannel() && !m.IsService() {
-				_, err = t.bot.Send(m.Chat, translation.GetDefaultTranslation().TelegramAnswerMessage, telebot.NoPreview)
+				_, err = t.bot.Send(m.Chat, translation.GetDefaultTranslation().BotAnswerMessage, telebot.NoPreview)
 				if err != nil {
 					em := fmt.Sprintln("telegram:", err)
 					log.Println(em)
@@ -279,6 +279,11 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 	defer counter.EndProcess()
 	t.l.Lock()
 	defer t.l.Unlock()
+
+	if t.bot == nil {
+		// no bot configurated - jump out
+		return
+	}
 
 	remove := make(map[int64]bool)
 	for i := range t.Targets {
