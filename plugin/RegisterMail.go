@@ -332,6 +332,7 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			for i := range r.ToData {
 				if r.ToData[i].Salt == key {
 					if !r.ToData[i].Hash && r.ToData[i].Data == mail {
+						// Data is not hashed
 						salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
 						if err != nil {
 							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
@@ -358,29 +359,31 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 						t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
 						server.TextTemplate.Execute(rw, t)
 						return
-					} else {
-						hash, err := base64.StdEncoding.DecodeString(r.ToData[i].Data)
-						if err != nil {
-							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
-							rw.WriteHeader(http.StatusInternalServerError)
-							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-							server.TextTemplate.Execute(rw, t)
-							return
-						}
-						salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
-						if err != nil {
-							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
-							rw.WriteHeader(http.StatusInternalServerError)
-							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-							server.TextTemplate.Execute(rw, t)
-							return
-						}
-						if helper.VerifyHash([]byte(mail), hash, salt) {
-							t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
-							server.TextTemplate.Execute(rw, t)
-							return
-						}
 					}
+
+					// Data is hashed
+					hash, err := base64.StdEncoding.DecodeString(r.ToData[i].Data)
+					if err != nil {
+						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+						rw.WriteHeader(http.StatusInternalServerError)
+						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					}
+					salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
+					if err != nil {
+						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
+						rw.WriteHeader(http.StatusInternalServerError)
+						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					}
+					if helper.VerifyHash([]byte(mail), hash, salt) {
+						t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+						server.TextTemplate.Execute(rw, t)
+						return
+					}
+
 				}
 			}
 

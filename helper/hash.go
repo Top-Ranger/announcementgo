@@ -22,6 +22,8 @@ import (
 	"crypto/subtle"
 )
 
+// Hash creates a hash of the data.
+// The function will create a salt for the hash.
 func Hash(data []byte) (hash, salt []byte, err error) {
 	salt = make([]byte, sha512.Size)
 	_, err = rand.Read(salt)
@@ -31,6 +33,8 @@ func Hash(data []byte) (hash, salt []byte, err error) {
 	return
 }
 
+// HashForSalt creates a hash of the data.
+// You have to provide a salt for the hash.
 func HashForSalt(data, salt []byte) (hash []byte) {
 	h := hmac.New(sha512.New, salt)
 	h.Write(data)
@@ -38,6 +42,7 @@ func HashForSalt(data, salt []byte) (hash []byte) {
 	return
 }
 
+// VerifyHash returns whether the data and the hash correspond (given the salt).
 func VerifyHash(data, hash, salt []byte) bool {
 	h := hmac.New(sha512.New, salt)
 	h.Write(data)

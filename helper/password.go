@@ -33,6 +33,8 @@ func init() {
 	}
 }
 
+// EncodePassword returns an encoded (hashed) version of the password.
+// The encoding is not consistent on restarts f the application.
 func EncodePassword(pw string) string {
 	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, passowrdEncodedLength)
 	return base32.StdEncoding.EncodeToString(key)
