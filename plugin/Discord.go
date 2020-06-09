@@ -186,7 +186,7 @@ func (d *discord) GetConfig() template.HTML {
 	td := discordConfigTemplateStruct{
 		Valid:      d.bot != nil,
 		Token:      d.Token,
-		UserNumber: "not available",
+		UserNumber: "[not available]",
 	}
 
 	if d.bot != nil {
