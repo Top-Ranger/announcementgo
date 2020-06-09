@@ -184,20 +184,23 @@ func (d *discord) GetConfig() template.HTML {
 	defer d.l.Unlock()
 
 	td := discordConfigTemplateStruct{
-		Valid: d.bot != nil,
-		Token: d.Token,
+		Valid:      d.bot != nil,
+		Token:      d.Token,
+		UserNumber: "not available",
 	}
 
-	g, err := d.bot.UserGuilds(100, "", "")
-	if err != nil {
-		em := fmt.Sprintln("discord:", err)
-		log.Println(em)
-		d.e <- em
-		td.UserNumber = em
-	} else {
-		td.UserNumber = strconv.Itoa(len(g))
-		if len(g) >= 100 {
-			td.UserNumber = "100+"
+	if d.bot != nil {
+		g, err := d.bot.UserGuilds(100, "", "")
+		if err != nil {
+			em := fmt.Sprintln("discord:", err)
+			log.Println(em)
+			d.e <- em
+			td.UserNumber = em
+		} else {
+			td.UserNumber = strconv.Itoa(len(g))
+			if len(g) >= 100 {
+				td.UserNumber = "100+"
+			}
 		}
 	}
 
