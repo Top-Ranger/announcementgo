@@ -46,7 +46,7 @@
     <form id="publish" method="POST">
       <input type="hidden" name="target" value="publish">
       <h2>{{.Translation.Subject}}</h2>
-      <p><input class="widthtextarea" type="text" name="subject" placeholder="{{.Translation.Subject}}" required></p>
+      <p><input class="widthtextarea" type="text" name="subject" placeholder="{{.Translation.Subject}}" required autocomplete="off"></p>
       <h2>{{.Translation.Message}}</h2>
       <textarea name="message" rows="10" form="publish" placeholder="{{.Translation.Message}}" required></textarea>
       <p><input type="checkbox" id="dsgvo_publish" name="dsgvo" required><label for="dsgvo_publish">{{.Translation.AcceptPrivacyPolicy}}</label></p>
