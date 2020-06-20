@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Top-Ranger/announcementgo/counter"
@@ -266,6 +267,19 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 		return
 	}
 
+	send := func(channelID, message string) error {
+		// caller has to lock
+		if len(message) > 1500 { // discord character limit
+			// We probably need to send a file
+			buf := bytes.NewBufferString(message)
+			_, err := d.bot.ChannelFileSend(channelID, strings.Join([]string{d.key, "txt"}, "."), buf)
+			return err
+		}
+		// We can send the string
+		_, err := d.bot.ChannelMessageSend(message, a.Message)
+		return err
+	}
+
 	startid := ""
 	loop := true
 
@@ -294,7 +308,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			foundNews := false
 			for i := range c {
 				if c[i].Type == discordgo.ChannelTypeGuildNews {
-					_, err := d.bot.ChannelMessageSend(c[i].ID, a.Message)
+					err = send(c[i].ID, a.Message)
 					if err != nil {
 						em := fmt.Sprintln("discord:", err)
 						log.Println(em)
@@ -309,7 +323,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			if !foundNews {
 				for i := range c {
 					if c[i].Type == discordgo.ChannelTypeGuildText {
-						_, err := d.bot.ChannelMessageSend(c[i].ID, a.Message)
+						err = send(c[i].ID, a.Message)
 						if err != nil {
 							em := fmt.Sprintln("discord:", err)
 							log.Println(em)
