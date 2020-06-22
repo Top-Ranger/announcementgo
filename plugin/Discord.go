@@ -276,7 +276,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			return err
 		}
 		// We can send the string
-		_, err := d.bot.ChannelMessageSend(message, a.Message)
+		_, err := d.bot.ChannelMessageSend(channelID, message)
 		return err
 	}
 
