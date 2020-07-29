@@ -62,6 +62,12 @@ func telegramFactory(key, shortDescription string, errorChannel chan string) (re
 		if err != nil {
 			return nil, err
 		}
+		if t.Token != "" && t.TokenHidden {
+			t.Token, err = helper.UnhidePassword(t.Token)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	t.l = new(sync.Mutex)
 	t.key = key
@@ -100,8 +106,9 @@ type telegramConfigTemplateStruct struct {
 }
 
 type telegram struct {
-	Token   string
-	Targets []int64
+	Token       string
+	TokenHidden bool
+	Targets     []int64
 
 	bot          *telebot.Bot
 	currentToken string
@@ -211,9 +218,14 @@ func (t *telegram) update() error {
 		go t.bot.Start()
 	}
 
+	tmpToken := t.Token
+	t.Token = helper.HidePassword(t.Token)
+	t.TokenHidden = true
 	var config bytes.Buffer
 	enc := gob.NewEncoder(&config)
 	err := enc.Encode(t)
+	t.Token = tmpToken
+	t.TokenHidden = false
 	if err != nil {
 		em := fmt.Sprintln("telegram:", err)
 		log.Println(em)

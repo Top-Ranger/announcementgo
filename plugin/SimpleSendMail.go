@@ -61,6 +61,12 @@ func simpleSendMailFactory(key, shortDescription string, errorChannel chan strin
 		if err != nil {
 			return nil, err
 		}
+		if s.SMTPPassword != "" && s.SMTPPasswordHidden {
+			s.SMTPPassword, err = helper.UnhidePassword(s.SMTPPassword)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	s.l = new(sync.Mutex)
 	s.key = key
@@ -99,13 +105,14 @@ type simpleSendMailConfigTemplateStruct struct {
 }
 
 type simpleSendMail struct {
-	SubjectPrefix  string
-	From           mail.Address
-	To             []*mail.Address
-	SMTPServer     string
-	SMTPServerPort int
-	SMTPUser       string
-	SMTPPassword   string
+	SubjectPrefix      string
+	From               mail.Address
+	To                 []*mail.Address
+	SMTPServer         string
+	SMTPServerPort     int
+	SMTPUser           string
+	SMTPPassword       string
+	SMTPPasswordHidden bool
 
 	l   *sync.Mutex
 	key string
@@ -247,9 +254,14 @@ func (s *simpleSendMail) ProcessConfigChange(r *http.Request) error {
 		return err
 	}
 
+	tmpPw := s.SMTPPassword
+	s.SMTPPassword = helper.HidePassword(s.SMTPPassword)
+	s.SMTPPasswordHidden = true
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err = enc.Encode(s)
+	s.SMTPPassword = tmpPw
+	s.SMTPPasswordHidden = false
 	if err != nil {
 		return err
 	}

@@ -82,6 +82,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 		if err != nil {
 			return nil, err
 		}
+		if r.SMTPPassword != "" && r.SMTPPasswordHidden {
+			r.SMTPPassword, err = helper.UnhidePassword(r.SMTPPassword)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	r.l = new(sync.Mutex)
 	r.key = key
@@ -730,6 +736,7 @@ type registerMail struct {
 	SMTPServerPort     int
 	SMTPUser           string
 	SMTPPassword       string
+	SMTPPasswordHidden bool
 	RateLimit          int
 	RegisterMailText   string
 	UnregisterLinkText string
@@ -783,9 +790,14 @@ func (r registerMail) verify() bool {
 
 func (r *registerMail) save() error {
 	// Caller needs to lock
+	tmpPw := r.SMTPPassword
+	r.SMTPPassword = helper.HidePassword(r.SMTPPassword)
+	r.SMTPPasswordHidden = true
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(r)
+	r.SMTPPassword = tmpPw
+	r.SMTPPasswordHidden = false
 	if err != nil {
 		return err
 	}

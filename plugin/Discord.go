@@ -62,6 +62,12 @@ func discordFactory(key, shortDescription string, errorChannel chan string) (reg
 		if err != nil {
 			return nil, err
 		}
+		if d.Token != "" && d.TokenHidden {
+			d.Token, err = helper.UnhidePassword(d.Token)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	d.l = new(sync.Mutex)
 	d.key = key
@@ -100,7 +106,8 @@ type discordConfigTemplateStruct struct {
 }
 
 type discord struct {
-	Token string
+	Token       string
+	TokenHidden bool
 
 	bot          *discordgo.Session
 	currentToken string
@@ -163,9 +170,14 @@ func (d *discord) update() error {
 		}
 	}
 
+	tmpToken := d.Token
+	d.TokenHidden = true
+	d.Token = helper.HidePassword(d.Token)
 	var config bytes.Buffer
 	enc := gob.NewEncoder(&config)
 	err := enc.Encode(d)
+	d.Token = tmpToken
+	d.TokenHidden = false
 	if err != nil {
 		em := fmt.Sprintln("discord:", err)
 		log.Println(em)

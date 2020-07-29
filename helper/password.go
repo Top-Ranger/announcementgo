@@ -39,3 +39,16 @@ func EncodePassword(pw string) string {
 	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, passowrdEncodedLength)
 	return base32.StdEncoding.EncodeToString(key)
 }
+
+// HidePassword encodes the password in a way it is no longer human readable.
+// This function is easily reverseable. Its sole purpose is to not save passwords as clear text on disks (to avoid an accidental read).
+// It provides no security against an attacker or bad actor.
+func HidePassword(pw string) string {
+	return base32.StdEncoding.EncodeToString([]byte(pw))
+}
+
+// UnhidePassword reveals a hidden password. See HidePassword for more information.
+func UnhidePassword(pw string) (string, error) {
+	b, err := base32.StdEncoding.DecodeString(pw)
+	return string(b), err
+}
