@@ -128,6 +128,8 @@ func (a *announcement) Initialise() error {
 	}
 
 	err := server.AddHandle(a.Key, "", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
 		// Test login
 		loggedin, admin := server.GetLogin(a.Key, r)
 
@@ -317,6 +319,7 @@ func (a *announcement) Initialise() error {
 	}
 
 	err = server.AddHandle(a.Key, "history.html", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		loggedin, _ := server.GetLogin(a.Key, r)
 		if !loggedin {
 			rw.WriteHeader(http.StatusForbidden)
