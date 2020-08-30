@@ -1,6 +1,7 @@
  {
     "Language": "en",
     "Address": "localhost:44455",
+    "LogFailedLogin": true,
     "LoginMinutes": 60,
     "PathConfig": "config/",
     "PathImpressum": "impressum.md",

@@ -302,6 +302,9 @@ func (a *announcement) Initialise() error {
 			}
 		}
 
+		if config.LogFailedLogin {
+			log.Printf("Failed login from %s", r.RemoteAddr)
+		}
 		rw.WriteHeader(http.StatusForbidden)
 		t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
 		server.TextTemplate.Execute(rw, t)

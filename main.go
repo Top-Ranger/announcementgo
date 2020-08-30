@@ -38,6 +38,7 @@ import (
 type ConfigStruct struct {
 	Language            string
 	Address             string
+	LogFailedLogin      bool
 	LoginMinutes        int
 	PathConfig          string
 	PathImpressum       string
