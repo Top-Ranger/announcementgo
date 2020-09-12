@@ -303,7 +303,7 @@ func (a *announcement) Initialise() error {
 		}
 
 		if config.LogFailedLogin {
-			log.Printf("Failed login from %s", r.RemoteAddr)
+			log.Printf("Failed login from %s", helper.GetRealIP(r))
 		}
 		rw.WriteHeader(http.StatusForbidden)
 		t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
