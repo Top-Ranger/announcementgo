@@ -22,6 +22,7 @@
   <div>
     <h1>{{.ShortDescription}}</h1>
     <h1>{{.Translation.History}}</h1>
+    <h2><a href="/{{.Key}}">{{.Translation.Back}}</a></h2>
   </div>
 
   {{range $i, $e := .History}}
@@ -34,6 +35,10 @@
     <p></p>
   </div>
   {{end}}
+
+  <div>
+    <h2><a href="/{{.Key}}">{{.Translation.Back}}</a></h2>
+  </div>
 
   <footer>
     <div>

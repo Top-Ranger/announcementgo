@@ -43,6 +43,7 @@ type Translation struct {
 	PrivacyPolicy                      string
 	AcceptPrivacyPolicy                string
 	History                            string
+	Back                               string
 	BotAnswerMessage                   string
 	RegisterMailRegister               string
 	RegisterMailRegisterCaptchaFailure string
