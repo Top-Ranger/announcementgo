@@ -38,7 +38,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/server"
 	"github.com/Top-Ranger/announcementgo/translation"
 	"github.com/Top-Ranger/auth/captcha"
-	"github.com/domodwyer/mailyak"
+	"github.com/domodwyer/mailyak/v3"
 )
 
 func init() {

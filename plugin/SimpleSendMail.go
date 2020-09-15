@@ -32,7 +32,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/counter"
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
-	"github.com/domodwyer/mailyak"
+	"github.com/domodwyer/mailyak/v3"
 )
 
 func init() {
