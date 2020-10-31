@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -306,7 +307,36 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 		return
 	}
 
+	messageParts := make([]string, 0)
+	parts := 0
+
+	for len(a.Message) > 3500 { // Telegram message limit
+		i := strings.LastIndex(a.Message[:3500], "\n") // Try split at new line
+
+		if i <= 500 { // Don't create really short messages or no index found
+			i = strings.LastIndex(a.Message[:3500], " ") // Try split at space
+
+			if i <= 500 { // Ok, there is really no good split point
+				i = 3000
+			}
+		}
+
+		var newPart string
+		newPart, a.Message = a.Message[:i], a.Message[i:]
+		parts++
+		a.Message = strings.TrimSpace(a.Message)
+		messageParts = append(messageParts, newPart)
+	}
+	messageParts = append(messageParts, a.Message)
+	if parts != 0 {
+		for i := range messageParts {
+			messageParts[i] = fmt.Sprintf("[%d/%d]\n%s", i+1, parts+1, messageParts[i])
+		}
+	}
+
 	remove := make(map[int64]bool)
+
+targetLoop:
 	for i := range t.Targets {
 		c, err := t.bot.ChatByID(strconv.FormatInt(t.Targets[i], 10))
 		if err != nil {
@@ -316,20 +346,22 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 			remove[t.Targets[i]] = true
 			continue
 		}
-		_, err = t.bot.Send(c, a.Message, telebot.NoPreview)
-		if err != nil {
-			em := fmt.Sprintln("telegram:", err)
-			log.Println(em)
-			t.e <- em
-			apierror, ok := err.(*telebot.APIError)
-			if !ok {
-				continue
-			}
+		for i := range messageParts {
+			_, err = t.bot.Send(c, messageParts[i], telebot.NoPreview)
+			if err != nil {
+				em := fmt.Sprintln("telegram:", err)
+				log.Println(em)
+				t.e <- em
+				apierror, ok := err.(*telebot.APIError)
+				if !ok {
+					continue targetLoop
+				}
 
-			if apierror.Code != 400 && apierror.Code != 500 {
-				remove[t.Targets[i]] = true
+				if apierror.Code != 400 && apierror.Code != 500 {
+					remove[t.Targets[i]] = true
+				}
+				continue targetLoop
 			}
-			continue
 		}
 	}
 
