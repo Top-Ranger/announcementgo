@@ -79,6 +79,8 @@ func telegramFactory(key, shortDescription string, errorChannel chan string) (re
 
 	err = t.update()
 
+	go t.sendWorker()
+
 	return t, err
 }
 
@@ -106,10 +108,16 @@ type telegramConfigTemplateStruct struct {
 	URL                 string
 }
 
+type telegramMessage struct {
+	Target  int64
+	Message string
+}
+
 type telegram struct {
 	Token       string
 	TokenHidden bool
 	Targets     []int64
+	Messages    []telegramMessage
 
 	bot          *telebot.Bot
 	currentToken string
@@ -334,46 +342,100 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 		}
 	}
 
-	remove := make(map[int64]bool)
-
-targetLoop:
-	for i := range t.Targets {
-		c, err := t.bot.ChatByID(strconv.FormatInt(t.Targets[i], 10))
-		if err != nil {
-			em := fmt.Sprintln("telegram:", err)
-			log.Println(em)
-			t.e <- em
-			remove[t.Targets[i]] = true
-			continue
+	for tar := range t.Targets {
+		for mp := range messageParts {
+			t.Messages = append(t.Messages, telegramMessage{Message: messageParts[mp], Target: t.Targets[tar]})
 		}
-		for i := range messageParts {
-			_, err = t.bot.Send(c, messageParts[i], telebot.NoPreview)
+	}
+
+	err := t.update()
+	if err != nil {
+		em := fmt.Sprintln("telegram:", err)
+		log.Println(em)
+		t.e <- em
+	}
+}
+
+func (t *telegram) sendWorker() {
+	for {
+		time.Sleep(2 * time.Second)
+
+		func() {
+			counter.StartProcess()
+			defer counter.EndProcess()
+			t.l.Lock()
+			defer t.l.Unlock()
+
+			if t.bot == nil {
+				return
+			}
+
+			if len(t.Messages) == 0 {
+				return
+			}
+
+			message := t.Messages[0]
+			t.Messages = t.Messages[1:]
+
+			// Check if target still exists
+			ok := false
+
+			for i := range t.Targets {
+				if t.Targets[i] == message.Target {
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				return
+			}
+
+			// Send message
+			c, err := t.bot.ChatByID(strconv.FormatInt(message.Target, 10))
+			if err != nil {
+				em := fmt.Sprintln("telegram:", err)
+				log.Println(em)
+				t.e <- em
+				t.removeTarget(message.Target)
+				err = t.update()
+				if err != nil {
+					em := fmt.Sprintln("telegram:", err)
+					log.Println(em)
+					t.e <- em
+				}
+				return
+			}
+
+			_, err = t.bot.Send(c, message.Message, telebot.NoPreview)
 			if err != nil {
 				em := fmt.Sprintln("telegram:", err)
 				log.Println(em)
 				t.e <- em
 				apierror, ok := err.(*telebot.APIError)
-				if !ok {
-					continue targetLoop
+				if ok {
+					if apierror.Code != 400 && apierror.Code != 500 {
+						t.removeTarget(message.Target)
+					}
 				}
-
-				if apierror.Code != 400 && apierror.Code != 500 {
-					remove[t.Targets[i]] = true
-				}
-				continue targetLoop
 			}
+			err = t.update()
+			if err != nil {
+				em := fmt.Sprintln("telegram:", err)
+				log.Println(em)
+				t.e <- em
+			}
+		}()
+	}
+}
+
+func (t *telegram) removeTarget(target int64) {
+	// Caller has to lock and save
+	newIDs := make([]int64, 0, len(t.Targets))
+	for i := range t.Targets {
+		if t.Targets[i] != target {
+			newIDs = append(newIDs, t.Targets[i])
 		}
 	}
-
-	// cleanup
-	if len(remove) != 0 {
-		newIDs := make([]int64, 0, len(t.Targets))
-		for i := range t.Targets {
-			if !remove[t.Targets[i]] {
-				newIDs = append(newIDs, t.Targets[i])
-			}
-		}
-		t.Targets = newIDs
-		t.update()
-	}
+	t.Targets = newIDs
 }
