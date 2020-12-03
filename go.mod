@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/Top-Ranger/auth v1.0.0
 	github.com/bwmarrin/discordgo v0.22.0
-	github.com/domodwyer/mailyak/v3 v3.3.0
+	github.com/domodwyer/mailyak/v3 v3.2.2
 	github.com/gorilla/feeds v1.1.1
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
