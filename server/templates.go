@@ -13,27 +13,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package server
 
 import (
 	"html/template"
-	"io/ioutil"
 
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/translation"
 )
 
-var loginTemplate *template.Template
-var announcementTemplate *template.Template
-var historyTemplate *template.Template
+// LoginTemplate contains the template for the login page.
+var LoginTemplate *template.Template
 
-type loginTemplateStruct struct {
+// AnnouncementTemplate contains the template for the main page.
+var AnnouncementTemplate *template.Template
+
+// HistoryTemplate contains the template for the history page.
+var HistoryTemplate *template.Template
+
+// LoginTemplateStruct is a struct for the LoginTemplate.
+type LoginTemplateStruct struct {
 	Key              string
 	ShortDescription string
 	Translation      translation.Translation
 }
 
-type announcementTemplateStruct struct {
+// AnnouncementTemplateStruct is a struct for the AnnouncementTemplate.
+type AnnouncementTemplateStruct struct {
 	Key              string
 	Admin            bool
 	Message          string
@@ -43,7 +49,8 @@ type announcementTemplateStruct struct {
 	Errors           []string
 }
 
-type historyTemplateStruct struct {
+// HistoryTemplateStruct is a struct for the HistoryTemplate.
+type HistoryTemplateStruct struct {
 	Key              string
 	ShortDescription string
 	History          []registry.Announcement
@@ -57,29 +64,29 @@ func init() {
 		},
 	}
 
-	b, err := ioutil.ReadFile("template/login.html")
+	b, err := templateFiles.ReadFile("template/login.html")
 	if err != nil {
 		panic(err)
 	}
-	loginTemplate, err = template.New("login").Parse(string(b))
-	if err != nil {
-		panic(err)
-	}
-
-	b, err = ioutil.ReadFile("template/announcement.html")
-	if err != nil {
-		panic(err)
-	}
-	announcementTemplate, err = template.New("announcement").Funcs(funcMap).Parse(string(b))
+	LoginTemplate, err = template.New("login").Parse(string(b))
 	if err != nil {
 		panic(err)
 	}
 
-	b, err = ioutil.ReadFile("template/history.html")
+	b, err = templateFiles.ReadFile("template/announcement.html")
 	if err != nil {
 		panic(err)
 	}
-	historyTemplate, err = template.New("history").Funcs(funcMap).Parse(string(b))
+	AnnouncementTemplate, err = template.New("announcement").Funcs(funcMap).Parse(string(b))
+	if err != nil {
+		panic(err)
+	}
+
+	b, err = templateFiles.ReadFile("template/history.html")
+	if err != nil {
+		panic(err)
+	}
+	HistoryTemplate, err = template.New("history").Funcs(funcMap).Parse(string(b))
 	if err != nil {
 		panic(err)
 	}

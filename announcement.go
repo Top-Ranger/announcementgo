@@ -134,12 +134,12 @@ func (a *announcement) Initialise() error {
 		loggedin, admin := server.GetLogin(a.Key, r)
 
 		if !loggedin {
-			td := loginTemplateStruct{
+			td := server.LoginTemplateStruct{
 				Key:              a.Key,
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
 			}
-			err := loginTemplate.Execute(rw, td)
+			err := server.LoginTemplate.Execute(rw, td)
 			if err != nil {
 				log.Printf("login template: %s", err.Error())
 			}
@@ -150,7 +150,7 @@ func (a *announcement) Initialise() error {
 		switch r.Method {
 		case http.MethodGet:
 			a.l.Lock()
-			td := announcementTemplateStruct{
+			td := server.AnnouncementTemplateStruct{
 				Key:              a.Key,
 				Admin:            admin,
 				ShortDescription: a.ShortDescription,
@@ -173,7 +173,7 @@ func (a *announcement) Initialise() error {
 			}
 			td.Message = r.Form.Get("message")
 
-			err = announcementTemplate.Execute(rw, td)
+			err = server.AnnouncementTemplate.Execute(rw, td)
 			if err != nil {
 				log.Println("announcement get:", err.Error())
 			}
@@ -340,13 +340,13 @@ func (a *announcement) Initialise() error {
 			return
 		}
 
-		td := historyTemplateStruct{
+		td := server.HistoryTemplateStruct{
 			Key:              a.Key,
 			ShortDescription: a.ShortDescription,
 			History:          h,
 			Translation:      translation.GetDefaultTranslation(),
 		}
-		err = historyTemplate.Execute(rw, td)
+		err = server.HistoryTemplate.Execute(rw, td)
 		if err != nil {
 			log.Printf("announcement history template (%s): %s", a.Key, err.Error())
 		}

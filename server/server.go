@@ -18,13 +18,13 @@ package server
 import (
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,6 +39,9 @@ import (
 // TextTemplate is a simple template which only displays a text.
 var TextTemplate *template.Template
 
+//go:embed template/*
+var templateFiles embed.FS
+
 var serverMutex sync.Mutex
 var serverStarted bool
 var server http.Server
@@ -47,7 +50,8 @@ var initialised sync.Once
 var dsgvo []byte
 var impressum []byte
 
-var cachedFiles = make(map[string][]byte)
+//go:embed css/* static/* font/*
+var cachedFiles embed.FS
 var etagCompare string
 var cookieTime = 60
 
@@ -55,7 +59,7 @@ var robottxt = []byte(`User-agent: *
 Disallow: /`)
 
 func init() {
-	b, err := ioutil.ReadFile("template/text.html")
+	b, err := templateFiles.ReadFile("template/text.html")
 	if err != nil {
 		panic(err)
 	}
@@ -188,28 +192,6 @@ func InitialiseServer(config Config) error {
 		rw.Write(impressum)
 	})
 
-	// static files
-	for _, d := range []string{"css/", "static/", "font/"} {
-		filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				log.Panicln("server: Error wile caching files:", err)
-			}
-
-			if info.Mode().IsRegular() {
-				log.Println("static file handler: Caching file", path)
-
-				b, err := ioutil.ReadFile(path)
-				if err != nil {
-					log.Println("static file handler: Error reading file:", err)
-					return err
-				}
-				cachedFiles[path] = b
-				return nil
-			}
-			return nil
-		})
-	}
-
 	etag := fmt.Sprint("\"", strconv.FormatInt(time.Now().Unix(), 10), "\"")
 	etagCompare := strings.TrimSuffix(etag, "\"")
 	etagCompareApache := strings.Join([]string{etagCompare, "-"}, "")       // Dirty hack for apache2, who appends -gzip inside the quotes if the file is compressed, thus preventing If-None-Match matching the ETag
@@ -230,8 +212,8 @@ func InitialiseServer(config Config) error {
 		// Send file if existing in cache
 		path := r.URL.Path
 		path = strings.TrimPrefix(path, "/")
-		data, ok := cachedFiles[path]
-		if !ok {
+		data, err := cachedFiles.Open(path)
+		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 		} else {
 			rw.Header().Set("ETag", etag)
@@ -248,7 +230,7 @@ func InitialiseServer(config Config) error {
 			default:
 				rw.Header().Set("Content-Type", "text/plain")
 			}
-			rw.Write(data)
+			io.Copy(rw, data)
 		}
 	}
 
@@ -269,14 +251,13 @@ func InitialiseServer(config Config) error {
 			}
 		}
 
-		f, ok := cachedFiles["static/favicon.ico"]
+		f, err := cachedFiles.Open("static/favicon.ico")
 
-		if !ok {
+		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 			return
 		}
-
-		rw.Write(f)
+		io.Copy(rw, f)
 	})
 
 	// robots.txt

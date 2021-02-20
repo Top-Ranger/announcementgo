@@ -16,16 +16,16 @@
 package translation
 
 import (
+	"embed"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 )
+
+//go:embed *.json
+var translationJsons embed.FS
 
 // Translation represents an object holding all translations
 type Translation struct {
@@ -60,7 +60,6 @@ const defaultLanguage = "en"
 var initialiseCurrent sync.Once
 var current Translation
 var rwlock sync.RWMutex
-var translationPath = "./translation"
 
 // GetTranslation returns a Translation struct of the given language.
 // This function always loads translations from disk. Try to use GetDefaultTranslation where possible.
@@ -99,13 +98,8 @@ func getSingleTranslation(language string) (Translation, error) {
 	}
 
 	file := strings.Join([]string{language, "json"}, ".")
-	file = filepath.Join(translationPath, file)
 
-	if _, err := os.Open(file); os.IsNotExist(err) {
-		return Translation{}, fmt.Errorf("no translation for language '%s'", language)
-	}
-
-	b, err := ioutil.ReadFile(file)
+	b, err := translationJsons.ReadFile(file)
 	if err != nil {
 		return Translation{}, err
 	}
