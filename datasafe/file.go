@@ -19,7 +19,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -75,7 +74,7 @@ func (f *file) GetConfig(key, plugin string) ([]byte, error) {
 	key = strings.ReplaceAll(key, string(os.PathSeparator), "﷐")
 	plugin = strings.ReplaceAll(plugin, string(os.PathSeparator), "﷐")
 
-	b, err := ioutil.ReadFile(filepath.Join(f.path, "config", key, plugin))
+	b, err := os.ReadFile(filepath.Join(f.path, "config", key, plugin))
 
 	if os.IsNotExist(err) {
 		// No error - no configuration was saved
@@ -101,7 +100,7 @@ func (f *file) SetConfig(key, plugin string, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filepath.Join(f.path, "config", key, plugin), config, os.ModePerm)
+	return os.WriteFile(filepath.Join(f.path, "config", key, plugin), config, os.ModePerm)
 }
 
 func (f *file) SaveAnnouncement(key string, announcement registry.Announcement) (string, error) {

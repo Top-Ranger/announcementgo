@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -166,7 +166,7 @@ func InitialiseServer(config Config) error {
 	server = http.Server{Addr: config.Address}
 
 	// DSGVO
-	b, err := ioutil.ReadFile(config.PathDSGVO)
+	b, err := os.ReadFile(config.PathDSGVO)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func InitialiseServer(config Config) error {
 	})
 
 	// Impressum
-	b, err = ioutil.ReadFile(config.PathImpressum)
+	b, err = os.ReadFile(config.PathImpressum)
 	if err != nil {
 		return err
 	}
