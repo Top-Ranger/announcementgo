@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,14 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package templates
 
 import (
+	"embed"
 	"html/template"
 
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/translation"
 )
+
+//go:embed template/*
+var templateFiles embed.FS
+
+// TextTemplate is a simple template which only displays a text.
+var TextTemplate *template.Template
 
 // LoginTemplate contains the template for the login page.
 var LoginTemplate *template.Template
@@ -30,6 +37,12 @@ var AnnouncementTemplate *template.Template
 
 // HistoryTemplate contains the template for the history page.
 var HistoryTemplate *template.Template
+
+// TextTemplateStruct is a simple struct for the text template.
+type TextTemplateStruct struct {
+	Text        template.HTML
+	Translation translation.Translation
+}
 
 // LoginTemplateStruct is a struct for the LoginTemplate.
 type LoginTemplateStruct struct {
@@ -58,19 +71,23 @@ type HistoryTemplateStruct struct {
 }
 
 func init() {
+	var err error
+
+	TextTemplate, err = template.ParseFS(templateFiles, "template/text.html")
+	if err != nil {
+		panic(err)
+	}
+
+	LoginTemplate, err = template.ParseFS(templateFiles, "template/login.html")
+	if err != nil {
+		panic(err)
+	}
+
+	var b []byte
 	funcMap := template.FuncMap{
 		"even": func(i int) bool {
 			return i%2 == 0
 		},
-	}
-
-	b, err := templateFiles.ReadFile("template/login.html")
-	if err != nil {
-		panic(err)
-	}
-	LoginTemplate, err = template.New("login").Parse(string(b))
-	if err != nil {
-		panic(err)
 	}
 
 	b, err = templateFiles.ReadFile("template/announcement.html")

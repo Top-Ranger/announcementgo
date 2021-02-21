@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"
+	"github.com/Top-Ranger/announcementgo/templates"
 	"github.com/Top-Ranger/announcementgo/translation"
 )
 
@@ -133,12 +134,12 @@ func (a *announcement) Initialise() error {
 		loggedin, admin := server.GetLogin(a.Key, r)
 
 		if !loggedin {
-			td := server.LoginTemplateStruct{
+			td := templates.LoginTemplateStruct{
 				Key:              a.Key,
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
 			}
-			err := server.LoginTemplate.Execute(rw, td)
+			err := templates.LoginTemplate.Execute(rw, td)
 			if err != nil {
 				log.Printf("login template: %s", err.Error())
 			}
@@ -149,7 +150,7 @@ func (a *announcement) Initialise() error {
 		switch r.Method {
 		case http.MethodGet:
 			a.l.Lock()
-			td := server.AnnouncementTemplateStruct{
+			td := templates.AnnouncementTemplateStruct{
 				Key:              a.Key,
 				Admin:            admin,
 				ShortDescription: a.ShortDescription,
@@ -167,12 +168,12 @@ func (a *announcement) Initialise() error {
 			err := r.ParseForm()
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, t)
 			}
 			td.Message = r.Form.Get("message")
 
-			err = server.AnnouncementTemplate.Execute(rw, td)
+			err = templates.AnnouncementTemplate.Execute(rw, td)
 			if err != nil {
 				log.Println("announcement get:", err.Error())
 			}
@@ -182,8 +183,8 @@ func (a *announcement) Initialise() error {
 			err := r.ParseForm()
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -191,8 +192,8 @@ func (a *announcement) Initialise() error {
 			case "publish":
 				if r.Form.Get("dsgvo") == "" {
 					rw.WriteHeader(http.StatusPreconditionFailed)
-					td := server.TextTemplateStruct{Text: "412 Precondition Failed", Translation: translation.GetDefaultTranslation()}
-					server.TextTemplate.Execute(rw, td)
+					td := templates.TextTemplateStruct{Text: "412 Precondition Failed", Translation: translation.GetDefaultTranslation()}
+					templates.TextTemplate.Execute(rw, td)
 					return
 				}
 
@@ -200,8 +201,8 @@ func (a *announcement) Initialise() error {
 				message := r.Form.Get("message")
 				if message == "" || subject == "" {
 					rw.WriteHeader(http.StatusBadRequest)
-					td := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-					server.TextTemplate.Execute(rw, td)
+					td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+					templates.TextTemplate.Execute(rw, td)
 					return
 				}
 				an := registry.Announcement{
@@ -233,14 +234,14 @@ func (a *announcement) Initialise() error {
 					}
 				}
 				rw.WriteHeader(http.StatusBadRequest)
-				td := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-				server.TextTemplate.Execute(rw, td)
+				td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, td)
 				return
 			}
 		default:
 			rw.WriteHeader(http.StatusBadRequest)
-			t := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 	})
@@ -251,23 +252,23 @@ func (a *announcement) Initialise() error {
 	err = server.AddHandle(a.Key, "login", func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			rw.WriteHeader(http.StatusBadRequest)
-			t := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 		err := r.ParseForm()
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		password := r.Form.Get("password")
 		if password == "" {
 			rw.WriteHeader(http.StatusForbidden)
-			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -278,8 +279,8 @@ func (a *announcement) Initialise() error {
 				err := server.SetLoginCookie(a.Key, false, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)
-					t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-					server.TextTemplate.Execute(rw, t)
+					t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+					templates.TextTemplate.Execute(rw, t)
 					return
 				}
 				http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
@@ -292,8 +293,8 @@ func (a *announcement) Initialise() error {
 				err := server.SetLoginCookie(a.Key, true, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)
-					t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-					server.TextTemplate.Execute(rw, t)
+					t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+					templates.TextTemplate.Execute(rw, t)
 					return
 				}
 				http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
@@ -305,8 +306,8 @@ func (a *announcement) Initialise() error {
 			log.Printf("Failed login from %s", helper.GetRealIP(r))
 		}
 		rw.WriteHeader(http.StatusForbidden)
-		t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
-		server.TextTemplate.Execute(rw, t)
+		t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
+		templates.TextTemplate.Execute(rw, t)
 	})
 	if err != nil {
 		return err
@@ -325,8 +326,8 @@ func (a *announcement) Initialise() error {
 		loggedin, _ := server.GetLogin(a.Key, r)
 		if !loggedin {
 			rw.WriteHeader(http.StatusForbidden)
-			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -334,18 +335,18 @@ func (a *announcement) Initialise() error {
 		if err != nil {
 			log.Printf("announcement history (%s): %s", a.Key, err.Error())
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
-		td := server.HistoryTemplateStruct{
+		td := templates.HistoryTemplateStruct{
 			Key:              a.Key,
 			ShortDescription: a.ShortDescription,
 			History:          h,
 			Translation:      translation.GetDefaultTranslation(),
 		}
-		err = server.HistoryTemplate.Execute(rw, td)
+		err = templates.HistoryTemplate.Execute(rw, td)
 		if err != nil {
 			log.Printf("announcement history template (%s): %s", a.Key, err.Error())
 		}

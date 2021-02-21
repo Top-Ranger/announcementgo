@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"
+	"github.com/Top-Ranger/announcementgo/templates"
 	"github.com/Top-Ranger/announcementgo/translation"
 	"github.com/Top-Ranger/auth/captcha"
 	"github.com/domodwyer/mailyak/v3"
@@ -104,16 +105,16 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		if !r.verify() {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		tl := translation.GetDefaultTranslation()
 
 		if !r.RegistrationOpen {
-			t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -123,8 +124,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			if err != nil {
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 			td := registerMailRegisterSiteStruct{
@@ -139,27 +140,27 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			if err != nil {
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
-			t := server.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 
 		case http.MethodPost:
 			err := req.ParseForm()
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
 			if req.Form.Get("dsgvo") == "" {
 				rw.WriteHeader(http.StatusForbidden)
-				t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -168,23 +169,23 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 			if !captcha.VerifyStringsTimed(id, c, time.Now(), 1*time.Hour) {
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterCaptchaFailure)), Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterCaptchaFailure)), Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
 			if req.Form.Get("rp") != r.RegisterPassword {
 				rw.WriteHeader(http.StatusForbidden)
-				t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
 			m, err := mail.ParseAddress(req.Form.Get("mail"))
 			if err != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-				td := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-				server.TextTemplate.Execute(rw, td)
+				td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, td)
 				return
 
 			}
@@ -195,29 +196,29 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					if helper.VerifyHash([]byte(m.Address), hash, salt) {
 						rw.WriteHeader(http.StatusBadRequest)
-						td := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-						server.TextTemplate.Execute(rw, td)
+						td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+						templates.TextTemplate.Execute(rw, td)
 						return
 					}
 				} else {
 					if r.ToData[i].Data == m.Address {
 						rw.WriteHeader(http.StatusBadRequest)
-						td := server.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
-						server.TextTemplate.Execute(rw, td)
+						td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+						templates.TextTemplate.Execute(rw, td)
 						return
 					}
 				}
@@ -227,8 +228,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			if err != nil {
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -248,8 +249,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -268,14 +269,14 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			}
 			r.Queue = append(r.Queue, q)
 
-			t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterSuccess)), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterSuccess)), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 
 		default:
 			rw.WriteHeader(http.StatusMethodNotAllowed)
-			t := server.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 	})
@@ -290,16 +291,16 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		if !r.verify() {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		err := req.ParseForm()
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -316,12 +317,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			if err != nil {
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
-			t := server.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 
 		case http.MethodPost:
@@ -330,8 +331,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 			if key == "" || mail == "" {
 				rw.WriteHeader(http.StatusForbidden)
-				t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -343,8 +344,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 						if err != nil {
 							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 							rw.WriteHeader(http.StatusInternalServerError)
-							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-							server.TextTemplate.Execute(rw, t)
+							t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+							templates.TextTemplate.Execute(rw, t)
 							return
 						}
 
@@ -358,12 +359,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 						if err != nil {
 							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 							rw.WriteHeader(http.StatusInternalServerError)
-							t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-							server.TextTemplate.Execute(rw, t)
+							t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+							templates.TextTemplate.Execute(rw, t)
 							return
 						}
-						t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 
@@ -372,21 +373,21 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					if helper.VerifyHash([]byte(mail), hash, salt) {
-						t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailUnregisterSuccessful)), Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 
@@ -394,13 +395,13 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			}
 
 			rw.WriteHeader(http.StatusNotFound)
-			t := server.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 
 		default:
 			rw.WriteHeader(http.StatusMethodNotAllowed)
-			t := server.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 	})
@@ -415,23 +416,23 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		if !r.verify() {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		if _, admin := server.GetLogin(r.key, req); !admin {
 			rw.WriteHeader(http.StatusForbidden)
-			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		err := req.ParseForm()
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -446,12 +447,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			if err != nil {
 				log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 				rw.WriteHeader(http.StatusInternalServerError)
-				t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
-			t := server.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(buf.String()), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 
 		case http.MethodPost:
@@ -459,8 +460,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 			if mail == "" {
 				rw.WriteHeader(http.StatusForbidden)
-				t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 
@@ -470,8 +471,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 
@@ -485,24 +486,24 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
-					t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(strings.Join([]string{mail, "deleted."}, " "))), Translation: tl}
-					server.TextTemplate.Execute(rw, t)
+					t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(strings.Join([]string{mail, "deleted."}, " "))), Translation: tl}
+					templates.TextTemplate.Execute(rw, t)
 					return
 				}
 			}
 
 			rw.WriteHeader(http.StatusNotFound)
-			t := server.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "404 Not Found", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		default:
 			rw.WriteHeader(http.StatusMethodNotAllowed)
-			t := server.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "405 Method Not Allowed", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 	})
@@ -515,24 +516,24 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		if !r.verify() {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		tl := translation.GetDefaultTranslation()
 
 		if !r.RegistrationOpen {
-			t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegistrationClosed)), Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
 		err := req.ParseForm()
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -541,8 +542,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 		if key == "" || mail == "" {
 			rw.WriteHeader(http.StatusForbidden)
-			t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-			server.TextTemplate.Execute(rw, t)
+			t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+			templates.TextTemplate.Execute(rw, t)
 			return
 		}
 
@@ -553,16 +554,16 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 					if !helper.VerifyHash([]byte(mail), hash, salt) {
@@ -577,20 +578,20 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 					if err != nil {
 						log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 						rw.WriteHeader(http.StatusInternalServerError)
-						t := server.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-						server.TextTemplate.Execute(rw, t)
+						t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
+						templates.TextTemplate.Execute(rw, t)
 						return
 					}
 				}
-				t := server.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailValidationSuccess)), Translation: tl}
-				server.TextTemplate.Execute(rw, t)
+				t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailValidationSuccess)), Translation: tl}
+				templates.TextTemplate.Execute(rw, t)
 				return
 			}
 		}
 
 		rw.WriteHeader(http.StatusForbidden)
-		t := server.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
-		server.TextTemplate.Execute(rw, t)
+		t := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: tl}
+		templates.TextTemplate.Execute(rw, t)
 	})
 
 	return r, nil

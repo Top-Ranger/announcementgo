@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,15 +32,10 @@ import (
 
 	"github.com/Top-Ranger/announcementgo/counter"
 	"github.com/Top-Ranger/announcementgo/helper"
+	"github.com/Top-Ranger/announcementgo/templates"
 	"github.com/Top-Ranger/announcementgo/translation"
 	"github.com/Top-Ranger/auth/data"
 )
-
-// TextTemplate is a simple template which only displays a text.
-var TextTemplate *template.Template
-
-//go:embed template/*
-var templateFiles embed.FS
 
 var serverMutex sync.Mutex
 var serverStarted bool
@@ -57,24 +52,6 @@ var cookieTime = 60
 
 var robottxt = []byte(`User-agent: *
 Disallow: /`)
-
-func init() {
-	b, err := templateFiles.ReadFile("template/text.html")
-	if err != nil {
-		panic(err)
-	}
-
-	TextTemplate, err = template.New("text").Parse(string(b))
-	if err != nil {
-		panic(err)
-	}
-}
-
-// TextTemplateStruct is a simple struct for the text template.
-type TextTemplateStruct struct {
-	Text        template.HTML
-	Translation translation.Translation
-}
 
 // Config holds all server configuration.
 type Config struct {
@@ -170,9 +147,9 @@ func InitialiseServer(config Config) error {
 	if err != nil {
 		return err
 	}
-	text := TextTemplateStruct{helper.Format(b), translation.GetDefaultTranslation()}
+	text := templates.TextTemplateStruct{Text: helper.Format(b), Translation: translation.GetDefaultTranslation()}
 	output := bytes.NewBuffer(make([]byte, 0, len(text.Text)*2))
-	TextTemplate.Execute(output, text)
+	templates.TextTemplate.Execute(output, text)
 	dsgvo = output.Bytes()
 
 	http.HandleFunc("/dsgvo.html", func(rw http.ResponseWriter, r *http.Request) {
@@ -184,9 +161,9 @@ func InitialiseServer(config Config) error {
 	if err != nil {
 		return err
 	}
-	text = TextTemplateStruct{helper.Format(b), translation.GetDefaultTranslation()}
+	text = templates.TextTemplateStruct{Text: helper.Format(b), Translation: translation.GetDefaultTranslation()}
 	output = bytes.NewBuffer(make([]byte, 0, len(text.Text)*2))
-	TextTemplate.Execute(output, text)
+	templates.TextTemplate.Execute(output, text)
 	impressum = output.Bytes()
 	http.HandleFunc("/impressum.html", func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write(impressum)
@@ -272,14 +249,14 @@ func InitialiseServer(config Config) error {
 func rootHandle(rw http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		tl := translation.GetDefaultTranslation()
-		t := TextTemplateStruct{template.HTML("AnnouncementGo!"), tl}
-		TextTemplate.Execute(rw, t)
+		t := templates.TextTemplateStruct{Text: template.HTML("AnnouncementGo!"), Translation: tl}
+		templates.TextTemplate.Execute(rw, t)
 		return
 	}
 	tl := translation.GetDefaultTranslation()
-	t := TextTemplateStruct{template.HTML("404 Not Found"), tl}
+	t := templates.TextTemplateStruct{Text: template.HTML("404 Not Found"), Translation: tl}
 	rw.WriteHeader(http.StatusNotFound)
-	TextTemplate.Execute(rw, t)
+	templates.TextTemplate.Execute(rw, t)
 	return
 }
 
