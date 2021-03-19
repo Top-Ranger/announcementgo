@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,10 @@ import (
 	"github.com/Top-Ranger/announcementgo/helper"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/translation"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
@@ -48,6 +52,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	telegramPolicy = bluemonday.NewPolicy()
+	telegramPolicy.AllowElements("b", "strong", "i", "em", "u", "ins", "s", "strike", "del", "a", "code", "pre")
+	telegramPolicy.RequireParseableURLs(true)
+	telegramPolicy.AllowURLSchemes("http", "https")
+	telegramPolicy.AllowAttrs("href").OnElements("a")
+	telegramPolicy.AllowAttrs("class").OnElements("code")
 }
 
 func telegramFactory(key, shortDescription string, errorChannel chan string) (registry.Plugin, error) {
@@ -99,6 +110,7 @@ const telegramConfig = `
 `
 
 var telegramConfigTemplate *template.Template
+var telegramPolicy *bluemonday.Policy // special policy for Telegram HTML - see https://core.telegram.org/bots/api#html-style
 
 type telegramConfigTemplateStruct struct {
 	Valid               bool
@@ -374,6 +386,7 @@ func (t *telegram) sendWorker() {
 				return
 			}
 
+			var err error
 			message := t.Messages[0]
 			t.Messages = t.Messages[1:]
 
@@ -388,6 +401,15 @@ func (t *telegram) sendWorker() {
 			}
 
 			if !ok {
+				return
+			}
+
+			// Format message
+			message.Message, err = t.formatMessage(message.Message)
+			if err != nil {
+				em := fmt.Sprintln("telegram:", err)
+				log.Println(em)
+				t.e <- em
 				return
 			}
 
@@ -407,7 +429,7 @@ func (t *telegram) sendWorker() {
 				return
 			}
 
-			_, err = t.bot.Send(c, message.Message, telebot.NoPreview)
+			_, err = t.bot.Send(c, message.Message, &telebot.SendOptions{DisableWebPagePreview: true, ParseMode: telebot.ModeHTML})
 			if err != nil {
 				em := fmt.Sprintln("telegram:", err)
 				log.Println(em)
@@ -438,4 +460,15 @@ func (t *telegram) removeTarget(target int64) {
 		}
 	}
 	t.Targets = newIDs
+}
+
+func (t *telegram) formatMessage(message string) (string, error) {
+	buf := bytes.Buffer{}
+	md := goldmark.New(goldmark.WithExtensions(extension.GFM), goldmark.WithRendererOptions(html.WithHardWraps()))
+	err := md.Convert([]byte(message), &buf)
+	if err != nil {
+		return "", fmt.Errorf("Error rendering markdown: %w", err)
+	}
+
+	return string(telegramPolicy.SanitizeBytes(buf.Bytes())), nil
 }
