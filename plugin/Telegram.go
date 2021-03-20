@@ -123,6 +123,7 @@ type telegramConfigTemplateStruct struct {
 type telegramMessage struct {
 	Target  int64
 	Message string
+	Silent  bool
 }
 
 type telegram struct {
@@ -356,7 +357,7 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 
 	for tar := range t.Targets {
 		for mp := range messageParts {
-			t.Messages = append(t.Messages, telegramMessage{Message: messageParts[mp], Target: t.Targets[tar]})
+			t.Messages = append(t.Messages, telegramMessage{Message: messageParts[mp], Target: t.Targets[tar], Silent: mp != 0})
 		}
 	}
 
@@ -429,7 +430,7 @@ func (t *telegram) sendWorker() {
 				return
 			}
 
-			_, err = t.bot.Send(c, message.Message, &telebot.SendOptions{DisableWebPagePreview: true, ParseMode: telebot.ModeHTML})
+			_, err = t.bot.Send(c, message.Message, &telebot.SendOptions{DisableWebPagePreview: true, ParseMode: telebot.ModeHTML, DisableNotification: message.Silent})
 			if err != nil {
 				em := fmt.Sprintln("telegram:", err)
 				log.Println(em)
