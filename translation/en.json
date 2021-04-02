@@ -15,6 +15,7 @@
     "History": "History",
     "Back": "Back",
     "BotAnswerMessage": "I'm sorry, but at the moment I can't respond to messages.",
+    "BotSendOnThisChannel": "From now on, I will send announcements on this channel.",
     "RegisterMailRegister": "Register your mail address to get announcements",
     "RegisterMailRegisterCaptchaFailure": "Captcha verification failed - please try again",
     "RegisterMailRegisterNow": "register now",

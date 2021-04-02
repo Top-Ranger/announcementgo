@@ -108,6 +108,7 @@ type discordConfigTemplateStruct struct {
 type discord struct {
 	Token       string
 	TokenHidden bool
+	Channels    map[string]string
 
 	bot          *discordgo.Session
 	currentToken string
@@ -152,11 +153,78 @@ func (d *discord) update() error {
 				return
 			}
 
-			if c.Type != discordgo.ChannelTypeDM {
-				return
-			}
+			switch c.Type {
+			case discordgo.ChannelTypeDM:
+				d.bot.ChannelMessageSend(m.ChannelID, translation.GetDefaultTranslation().BotAnswerMessage)
 
-			d.bot.ChannelMessageSend(m.ChannelID, translation.GetDefaultTranslation().BotAnswerMessage)
+			case discordgo.ChannelTypeGuildText, discordgo.ChannelTypeGuildNews:
+				if m.Message.GuildID == "" || m.Message.ChannelID == "" {
+					return
+				}
+
+				mentioned := false
+
+				for i := range m.Message.Mentions {
+					if m.Message.Mentions[i].ID == s.State.User.ID {
+						mentioned = true
+						break
+					}
+				}
+
+				if !mentioned {
+					return
+				}
+
+				member, err := s.GuildMember(m.Message.GuildID, m.Message.Author.ID)
+				if err != nil {
+					em := fmt.Sprintln("discord:", err)
+					log.Println(em)
+					d.e <- em
+					return
+				}
+				roles, err := s.GuildRoles(m.Message.GuildID)
+				if err != nil {
+					em := fmt.Sprintln("discord:", err)
+					log.Println(em)
+					d.e <- em
+					return
+				}
+
+				isAdmin := false
+				for mr := range member.Roles {
+					for r := range roles {
+						if member.Roles[mr] == roles[r].ID {
+							isAdmin = (roles[r].Permissions & discordgo.PermissionAdministrator) != 0
+							break
+						}
+					}
+					if isAdmin {
+						break
+					}
+				}
+
+				d.l.Lock()
+				defer d.l.Unlock()
+				if d.Channels == nil {
+					d.Channels = make(map[string]string)
+				}
+				d.Channels[m.Message.GuildID] = m.Message.ChannelID
+				err = d.update()
+				if err != nil {
+					em := fmt.Sprintln("discord:", err)
+					log.Println(em)
+					d.e <- em
+					return
+				}
+
+				_, err = d.bot.ChannelMessageSend(m.ChannelID, translation.GetDefaultTranslation().BotSendOnThisChannel)
+				if err != nil {
+					em := fmt.Sprintln("discord:", err)
+					log.Println(em)
+					d.e <- em
+					return
+				}
+			}
 		})
 
 		d.currentToken = d.Token
@@ -316,23 +384,46 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 				continue
 			}
 
-			// Try to post in announcement channel
-			foundNews := false
-			for i := range c {
-				if c[i].Type == discordgo.ChannelTypeGuildNews {
-					err = send(c[i].ID, a.Message)
-					if err != nil {
-						em := fmt.Sprintln("discord:", err)
-						log.Println(em)
-						d.e <- em
-						continue
+			messageSent := false
+
+			// Try to send on predetermined channel
+			if d.Channels[guilds[g].ID] != "" {
+				channelID := d.Channels[guilds[g].ID]
+				fmt.Println(channelID)
+				for i := range c {
+					if c[i].ID == channelID {
+						// We found the channel
+						err = send(c[i].ID, a.Message)
+						if err != nil {
+							em := fmt.Sprintln("discord:", err)
+							log.Println(em)
+							d.e <- em
+							continue
+						}
+						messageSent = true
+						break
 					}
-					foundNews = true
+				}
+			}
+
+			// Try to post in announcement channel
+			if !messageSent {
+				for i := range c {
+					if c[i].Type == discordgo.ChannelTypeGuildNews {
+						err = send(c[i].ID, a.Message)
+						if err != nil {
+							em := fmt.Sprintln("discord:", err)
+							log.Println(em)
+							d.e <- em
+							continue
+						}
+						messageSent = true
+					}
 				}
 			}
 
 			// Ok, there is none. Try text channels instead
-			if !foundNews {
+			if !messageSent {
 				for i := range c {
 					if c[i].Type == discordgo.ChannelTypeGuildText {
 						err = send(c[i].ID, a.Message)

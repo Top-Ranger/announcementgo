@@ -15,6 +15,7 @@
     "History": "Bisherige Benachrichtigungen",
     "Back": "Zurück",
     "BotAnswerMessage": "Es tut mir leid, aber im Moment kann ich noch nicht auf Nachrichten antworten.",
+    "BotSendOnThisChannel": "Ich werde in Zukunft Bekanntmachungen auf diesem Kanal senden.",
     "RegisterMailRegister": "Registriere deine E-Mail, um Benachrichtigungen zu erhalten",
     "RegisterMailRegisterCaptchaFailure": "Captcha falsch - bitte versuchen Sie es nochmal",
     "RegisterMailRegisterNow": "Jetzt registrieren",

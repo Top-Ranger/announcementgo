@@ -45,6 +45,7 @@ type Translation struct {
 	History                            string
 	Back                               string
 	BotAnswerMessage                   string
+	BotSendOnThisChannel               string
 	RegisterMailRegister               string
 	RegisterMailRegisterCaptchaFailure string
 	RegisterMailRegisterNow            string
