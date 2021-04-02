@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -183,25 +183,19 @@ func (d *discord) update() error {
 					d.e <- em
 					return
 				}
-				roles, err := s.GuildRoles(m.Message.GuildID)
-				if err != nil {
-					em := fmt.Sprintln("discord:", err)
-					log.Println(em)
-					d.e <- em
-					return
-				}
 
 				isAdmin := false
 				for mr := range member.Roles {
-					for r := range roles {
-						if member.Roles[mr] == roles[r].ID {
-							isAdmin = (roles[r].Permissions & discordgo.PermissionAdministrator) != 0
+					if role, err := s.State.Role(m.Message.GuildID, member.Roles[mr]); err == nil {
+						isAdmin = (role.Permissions & discordgo.PermissionAdministrator) != 0
+						if isAdmin {
 							break
 						}
 					}
-					if isAdmin {
-						break
-					}
+				}
+
+				if !isAdmin {
+					return
 				}
 
 				d.l.Lock()
@@ -390,7 +384,6 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			// Try to send on predetermined channel
 			if d.Channels[guilds[g].ID] != "" {
 				channelID := d.Channels[guilds[g].ID]
-				fmt.Println(channelID)
 				for i := range c {
 					if c[i].ID == channelID {
 						// We found the channel
