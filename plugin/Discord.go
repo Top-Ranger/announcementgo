@@ -86,6 +86,7 @@ const discordConfig = `
 {{.ConfigValidFragment}}
 {{if .URL}}
 <p>{{.URL}}</p>
+<p>Administrators of servers can mention the bot on a channel to tell the bot to use that channel for announcements.</p>
 {{end}}
 <p>{{.UserNumber}} users</p>
 <form method="POST">
