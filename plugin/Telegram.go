@@ -108,6 +108,7 @@ const telegramConfig = `
 	<p><input type="submit" value="Update"></p>
 </form>
 `
+const telegramLimit = 3000 // Max len: 4.096, some buffer
 
 var telegramConfigTemplate *template.Template
 var telegramPolicy *bluemonday.Policy // special policy for Telegram HTML - see https://core.telegram.org/bots/api#html-style
@@ -329,20 +330,19 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 	}
 
 	// Include Header
-
 	a.Message = strings.Join([]string{a.Header, a.Message}, "\n\n")
 
 	messageParts := make([]string, 0)
 	parts := 0
 
-	for len(a.Message) > 3500 { // Telegram message limit
-		i := strings.LastIndex(a.Message[:3500], "\n") // Try split at new line
+	for len(a.Message) > telegramLimit { // Telegram message limit
+		i := strings.LastIndex(a.Message[:telegramLimit], "\n") // Try split at new line
 
 		if i <= 500 { // Don't create really short messages or no index found
-			i = strings.LastIndex(a.Message[:3500], " ") // Try split at space
+			i = strings.LastIndex(a.Message[:telegramLimit], " ") // Try split at space
 
 			if i <= 500 { // Ok, there is really no good split point
-				i = 3000
+				i = telegramLimit - 500
 			}
 		}
 
@@ -475,5 +475,10 @@ func (t *telegram) formatMessage(message string) (string, error) {
 		return "", fmt.Errorf("Error rendering markdown: %w", err)
 	}
 
-	return string(telegramPolicy.SanitizeBytes(buf.Bytes())), nil
+	// Work around for correct line breaks in Telegram message
+	b := buf.Bytes()
+	b = bytes.ReplaceAll(b, []byte("<br>"), []byte(""))
+	b = bytes.ReplaceAll(b, []byte("</p>"), []byte("</p>\n"))
+
+	return string(telegramPolicy.SanitizeBytes(b)), nil
 }
