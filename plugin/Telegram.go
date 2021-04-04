@@ -328,6 +328,10 @@ func (t *telegram) NewAnnouncement(a registry.Announcement, id string) {
 		return
 	}
 
+	// Include Header
+
+	a.Message = strings.Join([]string{a.Header, a.Message}, "\n\n")
+
 	messageParts := make([]string, 0)
 	parts := 0
 

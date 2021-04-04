@@ -342,7 +342,10 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 		return
 	}
 
-	send := func(channelID, message string) error {
+	// used in send
+	message := strings.Join([]string{a.Header, a.Message}, "\n\n")
+
+	send := func(channelID string) error {
 		// caller has to lock
 		if len(message) > 1500 { // discord character limit
 			// We probably need to send a file
@@ -387,7 +390,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 				for i := range c {
 					if c[i].ID == channelID {
 						// We found the channel
-						err = send(c[i].ID, a.Message)
+						err = send(c[i].ID)
 						if err != nil {
 							em := fmt.Sprintln("discord:", err)
 							log.Println(em)
@@ -404,7 +407,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			if !messageSent {
 				for i := range c {
 					if c[i].Type == discordgo.ChannelTypeGuildNews {
-						err = send(c[i].ID, a.Message)
+						err = send(c[i].ID)
 						if err != nil {
 							em := fmt.Sprintln("discord:", err)
 							log.Println(em)
@@ -420,7 +423,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 			if !messageSent {
 				for i := range c {
 					if c[i].Type == discordgo.ChannelTypeGuildText {
-						err = send(c[i].ID, a.Message)
+						err = send(c[i].ID)
 						if err != nil {
 							em := fmt.Sprintln("discord:", err)
 							log.Println(em)
