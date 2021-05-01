@@ -436,14 +436,19 @@ func (t *telegram) sendWorker() {
 
 			_, err = t.bot.Send(c, message.Message, &telebot.SendOptions{DisableWebPagePreview: true, ParseMode: telebot.ModeHTML, DisableNotification: message.Silent})
 			if err != nil {
-				em := fmt.Sprintln("telegram:", err)
-				log.Println(em)
-				t.e <- em
+
 				apierror, ok := err.(*telebot.APIError)
+				showError := !ok
 				if ok {
 					if apierror.Code != 400 && apierror.Code != 500 {
 						t.removeTarget(message.Target)
 					}
+					showError = apierror.Code != 403
+				}
+				if showError {
+					em := fmt.Sprintln("telegram:", err)
+					log.Println(em)
+					t.e <- em
 				}
 			}
 			err = t.update()
