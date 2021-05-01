@@ -9,11 +9,11 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.4
+	github.com/microcosm-cc/bluemonday v1.0.9
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/yuin/goldmark v1.3.2
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
-	golang.org/x/sys v0.0.0-20210313110737-8e9fff1a3a18 // indirect
+	github.com/yuin/goldmark v1.3.5
+	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
+	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
+	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887 // indirect
 	gopkg.in/tucnak/telebot.v2 v2.3.5
 )
