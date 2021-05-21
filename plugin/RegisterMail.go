@@ -209,8 +209,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 						return
 					}
 					if helper.VerifyHash([]byte(m.Address), hash, salt) {
-						rw.WriteHeader(http.StatusBadRequest)
-						td := templates.TextTemplateStruct{Text: "400 Bad Request", Translation: translation.GetDefaultTranslation()}
+						rw.WriteHeader(http.StatusForbidden)
+						td := templates.TextTemplateStruct{Text: "403 Forbidden", Translation: translation.GetDefaultTranslation()}
 						templates.TextTemplate.Execute(rw, td)
 						return
 					}
@@ -340,22 +340,12 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 				if r.ToData[i].Salt == key {
 					if !r.ToData[i].Hash && r.ToData[i].Data == mail {
 						// Data is not hashed
-						salt, err := base64.StdEncoding.DecodeString(r.ToData[i].Salt)
-						if err != nil {
-							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
-							rw.WriteHeader(http.StatusInternalServerError)
-							t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: tl}
-							templates.TextTemplate.Execute(rw, t)
-							return
-						}
 
-						hash := helper.HashForSalt([]byte(mail), salt)
+						// Completely remove data so that reregistration is possible
+						r.ToData[i] = r.ToData[len(r.ToData)-1]
+						r.ToData = r.ToData[:len(r.ToData)-1]
 
-						// Make data valid
-						r.ToData[i].Data = base64.StdEncoding.EncodeToString(hash)
-						r.ToData[i].Hash = true
-
-						err = r.save()
+						err := r.save()
 						if err != nil {
 							log.Printf("RegisterMail (%s): %s", r.key, err.Error())
 							rw.WriteHeader(http.StatusInternalServerError)
@@ -406,7 +396,7 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 		}
 	})
 
-	server.AddHandle(key, "RegisterMail/delete.html", func(rw http.ResponseWriter, req *http.Request) {
+	adminRemove := func(rw http.ResponseWriter, req *http.Request, banforever bool) {
 		counter.StartProcess()
 		r.l.Lock()
 		defer r.l.Unlock()
@@ -441,6 +431,7 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			td := registerMailDeleteSiteStruct{
 				Description: r.description,
 				Mail:        req.Form.Get("mail"),
+				Ban:         banforever,
 			}
 			var buf bytes.Buffer
 			err := registerMailDeleteSiteTemplate.Execute(&buf, td)
@@ -476,11 +467,19 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 						return
 					}
 
-					hash := helper.HashForSalt([]byte(mail), salt)
+					if banforever {
+						// Ban user
+						hash := helper.HashForSalt([]byte(mail), salt)
 
-					// Make data valid
-					r.ToData[i].Data = base64.StdEncoding.EncodeToString(hash)
-					r.ToData[i].Hash = true
+						// Make data valid
+						r.ToData[i].Data = base64.StdEncoding.EncodeToString(hash)
+						r.ToData[i].Hash = true
+					} else {
+						// Delete user so that reregistration is possible
+						r.ToData[i] = r.ToData[len(r.ToData)-1]
+						r.ToData = r.ToData[:len(r.ToData)-1]
+
+					}
 
 					err = r.save()
 					if err != nil {
@@ -506,7 +505,10 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 			templates.TextTemplate.Execute(rw, t)
 			return
 		}
-	})
+	}
+
+	server.AddHandle(key, "RegisterMail/delete.html", func(rw http.ResponseWriter, req *http.Request) { adminRemove(rw, req, false) })
+	server.AddHandle(key, "RegisterMail/ban.html", func(rw http.ResponseWriter, req *http.Request) { adminRemove(rw, req, true) })
 
 	server.AddHandle(key, "RegisterMail/verify.html", func(rw http.ResponseWriter, req *http.Request) {
 		counter.StartProcess()
@@ -622,7 +624,7 @@ const registerMailConfig = `
 	<summary>Known users</summary>
 	<ul>
 	{{range $i, $e := .KnownUser}}
-	<li>{{$e}} <a href="{{$.ThisServer}}/RegisterMail/delete.html?mail={{$e}}" target="_blank">🗑</a></li>
+	<li>{{$e}} <a href="{{$.ThisServer}}/RegisterMail/delete.html?mail={{$e}}" target="_blank">🗑</a> <a href="{{$.ThisServer}}/RegisterMail/ban.html?mail={{$e}}" target="_blank">🚫</a></li>
 	{{end}}
 	</ul>
 	</details>
@@ -706,16 +708,17 @@ var registerMailDeleteSiteTemplate *template.Template
 
 const registerMailDeleteSite = `
 <h1>{{.Description}}</h1>
-<p>Delete user</p>
+<p>{{if .Ban}}Ban{{else}}Delete{{end}} user</p>
 <form method="POST">
    <p>E-Mail: <br> <input type="email" name="mail" value={{.Mail}} placeholder="e-mail" required readonly></p>
-   <p><input type="submit" value="Delete"></p>
+   <p><input type="submit" {{if .Ban}}style="background-color: red;"{{end}} value="{{if .Ban}}Ban{{else}}Delete{{end}}"></p>
 </form>
 `
 
 type registerMailDeleteSiteStruct struct {
 	Description string
 	Mail        string
+	Ban         bool
 }
 
 type registerMailData struct {
