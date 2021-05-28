@@ -11,9 +11,9 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.9
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/yuin/goldmark v1.3.5
-	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
-	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
-	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887 // indirect
+	github.com/yuin/goldmark v1.3.7
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
+	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
 	gopkg.in/tucnak/telebot.v2 v2.3.5
 )
