@@ -41,6 +41,7 @@ type announcement struct {
 	Key              string
 	ShortDescription string
 	Plugins          []string
+	PasswordMethod   string
 	PasswordAdmin    []string
 	PasswordUser     []string
 
@@ -104,6 +105,11 @@ func (a *announcement) Initialise() error {
 
 	plugins := make(map[string]bool, len(a.Plugins))
 
+	ok = registry.PasswordMethodExists(a.PasswordMethod)
+	if !ok {
+		return fmt.Errorf("password method '%s' not known", a.PasswordMethod)
+	}
+
 	for i := range a.Plugins {
 		if plugins[a.Plugins[i]] {
 			return fmt.Errorf("announcement: plugin %s found twice", a.Plugins[i])
@@ -117,14 +123,6 @@ func (a *announcement) Initialise() error {
 			return fmt.Errorf("announcement: plugin %s has error %w", a.Plugins[i], err)
 		}
 		a.plugins = append(a.plugins, p)
-	}
-
-	for i := range a.PasswordAdmin {
-		a.PasswordAdmin[i] = helper.EncodePassword(a.PasswordAdmin[i])
-	}
-
-	for i := range a.PasswordUser {
-		a.PasswordUser[i] = helper.EncodePassword(a.PasswordUser[i])
 	}
 
 	err := server.AddHandle(a.Key, "", func(rw http.ResponseWriter, r *http.Request) {
@@ -272,10 +270,16 @@ func (a *announcement) Initialise() error {
 			return
 		}
 
-		password = helper.EncodePassword(password)
-
 		for i := range a.PasswordUser {
-			if password == a.PasswordUser[i] {
+			ok, err := registry.ComparePasswords(a.PasswordMethod, password, a.PasswordUser[i])
+			if err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, t)
+				return
+			}
+
+			if ok {
 				err := server.SetLoginCookie(a.Key, false, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)
@@ -289,7 +293,15 @@ func (a *announcement) Initialise() error {
 		}
 
 		for i := range a.PasswordAdmin {
-			if password == a.PasswordAdmin[i] {
+			ok, err := registry.ComparePasswords(a.PasswordMethod, password, a.PasswordAdmin[i])
+			if err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
+				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
+				templates.TextTemplate.Execute(rw, t)
+				return
+			}
+
+			if ok {
 				err := server.SetLoginCookie(a.Key, true, rw, r)
 				if err != nil {
 					rw.WriteHeader(http.StatusInternalServerError)

@@ -27,6 +27,7 @@ import (
 
 	"github.com/Top-Ranger/announcementgo/counter"
 	_ "github.com/Top-Ranger/announcementgo/datasafe"
+	_ "github.com/Top-Ranger/announcementgo/passwordmethods"
 	_ "github.com/Top-Ranger/announcementgo/plugin"
 	"github.com/Top-Ranger/announcementgo/registry"
 	"github.com/Top-Ranger/announcementgo/server"

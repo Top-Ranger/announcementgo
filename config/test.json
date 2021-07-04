@@ -2,6 +2,7 @@
     "Key": "test",
     "ShortDescription": "test announcement",
 	"Plugins": ["RSS", "SimpleSendMail", "Telegram", "RegisterMail", "Discord"],
+	"PasswordMethod": "plain",
 	"PasswordAdmin": ["admin"],
 	"PasswordUser": ["test"]
 }

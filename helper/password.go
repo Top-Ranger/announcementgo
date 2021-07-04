@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,29 +16,8 @@
 package helper
 
 import (
-	"crypto/rand"
 	"encoding/base32"
-
-	"golang.org/x/crypto/argon2"
 )
-
-const passowrdEncodedLength = 33
-
-var passwordSalt = make([]byte, passowrdEncodedLength)
-
-func init() {
-	_, err := rand.Read(passwordSalt)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// EncodePassword returns an encoded (hashed) version of the password.
-// The encoding is not consistent on restarts f the application.
-func EncodePassword(pw string) string {
-	key := argon2.IDKey([]byte(pw), passwordSalt, 1, 64*1024, 2, passowrdEncodedLength)
-	return base32.StdEncoding.EncodeToString(key)
-}
 
 // HidePassword encodes the password in a way it is no longer human readable.
 // This function is easily reverseable. Its sole purpose is to not save passwords as clear text on disks (to avoid an accidental read).
