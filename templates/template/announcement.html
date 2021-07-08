@@ -23,10 +23,64 @@
     </div>
   </header>
 
+  {{if .EnableDeleteErrors}}
+  <script>
+  function deleteErrors() {
+    let xhr = new XMLHttpRequest();
+    xhr.timeout = 10000;
+    let target = window.location
+    if(target[-1] != "/") {
+      target = target + "/"
+    }
+    target = target + "deleteErrors"
+    xhr.open("Put", target, true);
+      
+    xhr.onload = function() {
+      if (xhr.status == 200) {
+        let errors = document.getElementsByClassName("error");
+        for(let i = errors.length; i > 0; --i) {
+          errors[i-1].remove()
+        }
+      } else {
+        let errorText = "Error deleting errors. Got " + xhr.status + "."
+        console.log(errorText)
+        alert(errorText)
+      }
+
+      xhr.onerror = function(e) {
+        console.log(e)
+        alert("error")
+      };
+
+      xhr.ontimeout = function() {
+        console.log("timeout")
+        alert("timeout")
+      };
+    };
+     
+    xhr.send();
+  }
+  </script>
+
+  {{ if ne (len .Errors) 0 }}
+  <div class="error">
+    <p><button onclick="deleteErrors()">{{.Translation.DeleteErrorMessages}}</button></p>
+  </div>
+  {{end}}
+  {{end}}
+
   {{range $i, $e := .Errors}}
   <div class="error">
     <p>{{$e}}</p>
   </div>
+  {{end}}
+
+  {{if .EnableDeleteErrors}}
+  {{ if ne (len .Errors) 0 }}
+  <div class="error">
+    <p><button onclick="deleteErrors()">{{.Translation.DeleteErrorMessages}}</button></p>
+  </div>
+  {{end}}
   {{end}}
 
   {{if .Message}}

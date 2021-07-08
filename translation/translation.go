@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2021 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ type Translation struct {
 	Back                               string
 	CaptchaTextBefore                  string
 	CaptchaTextAfter                   string
+	DeleteErrorMessages                string
 	BotAnswerMessage                   string
 	BotSendOnThisChannel               string
 	RegisterMailRegister               string

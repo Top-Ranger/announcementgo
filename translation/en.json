@@ -16,6 +16,7 @@
     "Back": "Back",
     "CaptchaTextBefore": "Please enter the text",
     "CaptchaTextAfter": "in the next field.",
+    "DeleteErrorMessages": "Delete error messages",
     "BotAnswerMessage": "I'm sorry, but at the moment I can't respond to messages.",
     "BotSendOnThisChannel": "From now on, I will send announcements on this channel.",
     "RegisterMailRegister": "Register your mail address to get announcements",

@@ -16,6 +16,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -38,12 +40,14 @@ import (
 var knownKeys = make(map[string]bool)
 
 type announcement struct {
-	Key              string
-	ShortDescription string
-	Plugins          []string
-	PasswordMethod   string
-	PasswordAdmin    []string
-	PasswordUser     []string
+	Key                  string
+	ShortDescription     string
+	Plugins              []string
+	UsersSeeErrors       bool
+	UsersCanDeleteErrors bool
+	PasswordMethod       string
+	PasswordAdmin        []string
+	PasswordUser         []string
 
 	plugins []registry.Plugin
 	errors  []string
@@ -103,6 +107,8 @@ func (a *announcement) Initialise() error {
 	}
 	knownKeys[a.Key] = true
 
+	a.loadErrors()
+
 	plugins := make(map[string]bool, len(a.Plugins))
 
 	ok = registry.PasswordMethodExists(a.PasswordMethod)
@@ -153,9 +159,14 @@ func (a *announcement) Initialise() error {
 				Admin:            admin,
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
-				Errors:           a.errors,
+				Errors:           nil,
 			}
-			a.errors = nil
+			if admin || a.UsersSeeErrors {
+				td.Errors = a.errors
+			}
+			if admin || a.UsersCanDeleteErrors {
+				td.EnableDeleteErrors = true
+			}
 			a.l.Unlock()
 			if admin {
 				for i := range a.plugins {
@@ -364,6 +375,29 @@ func (a *announcement) Initialise() error {
 		}
 	})
 
+	err = server.AddHandle(a.Key, "deleteErrors", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		loggedin, admin := server.GetLogin(a.Key, r)
+		if !loggedin {
+			rw.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		if !(admin || a.UsersCanDeleteErrors) {
+			rw.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		counter.StartProcess()
+		a.l.Lock()
+		a.errors = nil
+		a.saveErrors()
+		a.l.Unlock()
+		counter.EndProcess()
+		rw.WriteHeader(http.StatusOK)
+		return
+	})
+
 	go announcemetWorker(a, errorChannel)
 
 	log.Println("announcement: sucessfully loaded", a.Key)
@@ -375,8 +409,55 @@ func announcemetWorker(a *announcement, errorChannel chan string) {
 		e := <-errorChannel
 		counter.StartProcess()
 		a.l.Lock()
-		a.errors = append(a.errors, e)
+		a.errors = append(a.errors, fmt.Sprintf("%s: %s", time.Now().Format(time.RFC3339), e))
+		a.saveErrors()
 		a.l.Unlock()
 		counter.EndProcess()
+	}
+}
+
+func (a *announcement) loadErrors() {
+	// Caller needs to lock
+	counter.StartProcess()
+	defer counter.EndProcess()
+	b, err := registry.CurrentDataSafe.GetConfig(a.Key, "internal##errors")
+	if err != nil {
+		log.Printf("loading errors (%s): %s", a.Key, err.Error())
+		return
+	}
+	if len(b) == 0 {
+		a.errors = nil
+		return
+	}
+	buf := bytes.NewBuffer(b)
+	dec := gob.NewDecoder(buf)
+	err = dec.Decode(&a.errors)
+	if err != nil {
+		log.Printf("decoding errors (%s): %s", a.Key, err.Error())
+		return
+	}
+}
+
+func (a *announcement) saveErrors() {
+	// Caller needs to lock
+	if a.errors == nil {
+		err := registry.CurrentDataSafe.SetConfig(a.Key, "internal##errors", nil)
+		if err != nil {
+			log.Printf("saving nil errors (%s): %s", a.Key, err.Error())
+			return
+		}
+	}
+
+	var config bytes.Buffer
+	enc := gob.NewEncoder(&config)
+	err := enc.Encode(&a.errors)
+	if err != nil {
+		log.Printf("encoding errors (%s): %s", a.Key, err.Error())
+		return
+	}
+	err = registry.CurrentDataSafe.SetConfig(a.Key, "internal##errors", config.Bytes())
+	if err != nil {
+		log.Printf("saving errors (%s): %s", a.Key, err.Error())
+		return
 	}
 }
