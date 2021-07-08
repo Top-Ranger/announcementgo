@@ -54,7 +54,8 @@ type announcement struct {
 	l       *sync.Mutex
 }
 
-// LoadAnnouncements loads all announcements in a path
+// LoadAnnouncements loads all announcements in a path.
+// The announcements are loaded in memory and registered to the server. You can not access them directly.
 // This function is not save to be used in parallel.
 // It should be used at the beginning of the lifetime of the application (before the server is started).
 func LoadAnnouncements(path string) error {
