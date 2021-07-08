@@ -44,6 +44,8 @@ type Translation struct {
 	AcceptPrivacyPolicy                string
 	History                            string
 	Back                               string
+	CaptchaTextBefore                  string
+	CaptchaTextAfter                   string
 	BotAnswerMessage                   string
 	BotSendOnThisChannel               string
 	RegisterMailRegister               string
