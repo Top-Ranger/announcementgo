@@ -55,6 +55,8 @@ type announcement struct {
 }
 
 // LoadAnnouncements loads all announcements in a path
+// This function is not save to be used in parallel.
+// It should be used at the beginning of the lifetime of the application (before the server is started).
 func LoadAnnouncements(path string) error {
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
