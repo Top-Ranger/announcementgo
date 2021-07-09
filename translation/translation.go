@@ -46,7 +46,7 @@ type Translation struct {
 	Back                               string
 	CaptchaTextBefore                  string
 	CaptchaTextAfter                   string
-	DeleteErrorMessages                string
+	DeleteMessages                     string
 	BotAnswerMessage                   string
 	BotSendOnThisChannel               string
 	RegisterMailRegister               string

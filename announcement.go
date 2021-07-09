@@ -40,18 +40,18 @@ import (
 var knownKeys = make(map[string]bool)
 
 type announcement struct {
-	Key                  string
-	ShortDescription     string
-	Plugins              []string
-	UsersSeeErrors       bool
-	UsersCanDeleteErrors bool
-	PasswordMethod       string
-	PasswordAdmin        []string
-	PasswordUser         []string
+	Key                    string
+	ShortDescription       string
+	Plugins                []string
+	UsersSeeErrors         bool
+	UsersCanDeleteMessages bool
+	PasswordMethod         string
+	PasswordAdmin          []string
+	PasswordUser           []string
 
-	plugins []registry.Plugin
-	errors  []string
-	l       *sync.Mutex
+	plugins  []registry.Plugin
+	messages []templates.AnnouncementMessage
+	l        *sync.Mutex
 }
 
 // LoadAnnouncements loads all announcements in a path.
@@ -78,7 +78,7 @@ func LoadAnnouncements(path string) error {
 		}
 		err = a.Initialise()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", path, err)
 		}
 
 		return nil
@@ -111,6 +111,10 @@ func (a *announcement) Initialise() error {
 	knownKeys[a.Key] = true
 
 	a.loadErrors()
+
+	if !a.UsersSeeErrors && a.UsersCanDeleteMessages {
+		return fmt.Errorf("users can only delete messages when they can see errors (%s)", a.Key)
+	}
 
 	plugins := make(map[string]bool, len(a.Plugins))
 
@@ -162,13 +166,13 @@ func (a *announcement) Initialise() error {
 				Admin:            admin,
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
-				Errors:           nil,
+				Messages:         a.messages,
 			}
 			if admin || a.UsersSeeErrors {
-				td.Errors = a.errors
+				td.ShowErrors = true
 			}
-			if admin || a.UsersCanDeleteErrors {
-				td.EnableDeleteErrors = true
+			if admin || (a.UsersSeeErrors && a.UsersCanDeleteMessages) {
+				td.EnableDeleteMessages = true
 			}
 			a.l.Unlock()
 			if admin {
@@ -183,7 +187,6 @@ func (a *announcement) Initialise() error {
 				t := templates.TextTemplateStruct{Text: "500 Internal Server Error", Translation: translation.GetDefaultTranslation()}
 				templates.TextTemplate.Execute(rw, t)
 			}
-			td.Message = r.Form.Get("message")
 
 			err = templates.AnnouncementTemplate.Execute(rw, td)
 			if err != nil {
@@ -229,7 +232,12 @@ func (a *announcement) Initialise() error {
 				for i := range a.plugins {
 					go a.plugins[i].NewAnnouncement(an, id)
 				}
-				http.Redirect(rw, r, fmt.Sprintf("/%s?message=%s", a.Key, url.QueryEscape(translation.GetDefaultTranslation().AnnouncementPublished)), http.StatusSeeOther)
+				a.l.Lock()
+				counter.StartProcess()
+				a.addMessage(translation.GetDefaultTranslation().AnnouncementPublished, false)
+				counter.EndProcess()
+				a.l.Unlock()
+				http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 				return
 			default:
 				t := r.Form.Get("target")
@@ -238,7 +246,12 @@ func (a *announcement) Initialise() error {
 						err = a.plugins[i].ProcessConfigChange(r)
 						if err != nil {
 							log.Printf("announcement plugin config (%s): %s", a.Plugins[i], err.Error())
-							http.Redirect(rw, r, fmt.Sprintf("/%s?message=%s", a.Key, url.QueryEscape(err.Error())), http.StatusSeeOther)
+							a.l.Lock()
+							counter.StartProcess()
+							a.addMessage(err.Error(), true)
+							counter.EndProcess()
+							a.l.Unlock()
+							http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
 							return
 						}
 						http.Redirect(rw, r, fmt.Sprintf("/%s", a.Key), http.StatusSeeOther)
@@ -386,15 +399,15 @@ func (a *announcement) Initialise() error {
 			return
 		}
 
-		if !(admin || a.UsersCanDeleteErrors) {
+		if !(admin || (a.UsersSeeErrors && a.UsersCanDeleteMessages)) {
 			rw.WriteHeader(http.StatusForbidden)
 			return
 		}
 
 		counter.StartProcess()
 		a.l.Lock()
-		a.errors = nil
-		a.saveErrors()
+		a.messages = nil
+		a.saveMessages()
 		a.l.Unlock()
 		counter.EndProcess()
 		rw.WriteHeader(http.StatusOK)
@@ -412,8 +425,7 @@ func announcemetWorker(a *announcement, errorChannel chan string) {
 		e := <-errorChannel
 		counter.StartProcess()
 		a.l.Lock()
-		a.errors = append(a.errors, fmt.Sprintf("%s: %s", time.Now().Format(time.RFC3339), e))
-		a.saveErrors()
+		a.addMessage(e, true)
 		a.l.Unlock()
 		counter.EndProcess()
 	}
@@ -423,28 +435,28 @@ func (a *announcement) loadErrors() {
 	// Caller needs to lock
 	counter.StartProcess()
 	defer counter.EndProcess()
-	b, err := registry.CurrentDataSafe.GetConfig(a.Key, "internal##errors")
+	b, err := registry.CurrentDataSafe.GetConfig(a.Key, "internal##messages")
 	if err != nil {
 		log.Printf("loading errors (%s): %s", a.Key, err.Error())
 		return
 	}
 	if len(b) == 0 {
-		a.errors = nil
+		a.messages = nil
 		return
 	}
 	buf := bytes.NewBuffer(b)
 	dec := gob.NewDecoder(buf)
-	err = dec.Decode(&a.errors)
+	err = dec.Decode(&a.messages)
 	if err != nil {
 		log.Printf("decoding errors (%s): %s", a.Key, err.Error())
 		return
 	}
 }
 
-func (a *announcement) saveErrors() {
+func (a *announcement) saveMessages() {
 	// Caller needs to lock
-	if a.errors == nil {
-		err := registry.CurrentDataSafe.SetConfig(a.Key, "internal##errors", nil)
+	if a.messages == nil {
+		err := registry.CurrentDataSafe.SetConfig(a.Key, "internal##messages", nil)
 		if err != nil {
 			log.Printf("saving nil errors (%s): %s", a.Key, err.Error())
 			return
@@ -453,14 +465,19 @@ func (a *announcement) saveErrors() {
 
 	var config bytes.Buffer
 	enc := gob.NewEncoder(&config)
-	err := enc.Encode(&a.errors)
+	err := enc.Encode(&a.messages)
 	if err != nil {
 		log.Printf("encoding errors (%s): %s", a.Key, err.Error())
 		return
 	}
-	err = registry.CurrentDataSafe.SetConfig(a.Key, "internal##errors", config.Bytes())
+	err = registry.CurrentDataSafe.SetConfig(a.Key, "internal##messages", config.Bytes())
 	if err != nil {
 		log.Printf("saving errors (%s): %s", a.Key, err.Error())
 		return
 	}
+}
+
+func (a *announcement) addMessage(text string, error bool) {
+	a.messages = append(a.messages, templates.AnnouncementMessage{Text: fmt.Sprintf("%s: %s", time.Now().Format(time.RFC3339), text), Error: error})
+	a.saveMessages()
 }

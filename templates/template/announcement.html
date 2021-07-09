@@ -13,17 +13,13 @@
 </head>
 
 <body>
-  <script>
-  window.history.replaceState({}, document.title, document.location.href.split("?")[0]);
-  </script>
-
   <header>
     <div style="margin-left: 1%">
       AnnouncementGo!
     </div>
   </header>
 
-  {{if .EnableDeleteErrors}}
+  {{if .EnableDeleteMessages}}
   <script>
   function deleteErrors() {
     let xhr = new XMLHttpRequest();
@@ -37,7 +33,7 @@
       
     xhr.onload = function() {
       if (xhr.status == 200) {
-        let errors = document.getElementsByClassName("error");
+        let errors = document.querySelectorAll(".error,.message,.deleteMessages");
         for(let i = errors.length; i > 0; --i) {
           errors[i-1].remove()
         }
@@ -62,31 +58,27 @@
   }
   </script>
 
-  {{ if ne (len .Errors) 0 }}
-  <div class="error">
-    <p><button onclick="deleteErrors()">{{.Translation.DeleteErrorMessages}}</button></p>
+  {{ if ne (len .Messages) 0 }}
+  <div class="deleteMessages">
+    <p><button onclick="deleteErrors()">{{.Translation.DeleteMessages}}</button></p>
   </div>
   {{end}}
   {{end}}
 
-  {{range $i, $e := .Errors}}
-  <div class="error">
-    <p>{{$e}}</p>
-  </div>
-  {{end}}
-
-  {{if .EnableDeleteErrors}}
-  {{ if ne (len .Errors) 0 }}
-  <div class="error">
-    <p><button onclick="deleteErrors()">{{.Translation.DeleteErrorMessages}}</button></p>
+  {{range $i, $e := .Messages}}
+  {{if or $.ShowErrors (not $e.Error)}}
+  <div class="{{if $e.Error}}error{{else}}message{{end}}">
+    <p>{{$e.Text}}</p>
   </div>
   {{end}}
   {{end}}
 
-  {{if .Message}}
-  <div class="message">
-    <p>{{.Message}}</p>
+  {{if .EnableDeleteMessages}}
+  {{ if ne (len .Messages) 0 }}
+  <div class="deleteMessages">
+    <p><button onclick="deleteErrors()">{{.Translation.DeleteMessages}}</button></p>
   </div>
+  {{end}}
   {{end}}
 
   <div>

@@ -53,14 +53,19 @@ type LoginTemplateStruct struct {
 
 // AnnouncementTemplateStruct is a struct for the AnnouncementTemplate.
 type AnnouncementTemplateStruct struct {
-	Key                string
-	Admin              bool
-	Message            string
-	ShortDescription   string
-	PluginConfig       []template.HTML
-	Translation        translation.Translation
-	Errors             []string
-	EnableDeleteErrors bool
+	Key                  string
+	Admin                bool
+	ShortDescription     string
+	PluginConfig         []template.HTML
+	Translation          translation.Translation
+	Messages             []AnnouncementMessage
+	EnableDeleteMessages bool
+	ShowErrors           bool
+}
+
+type AnnouncementMessage struct {
+	Text  string
+	Error bool
 }
 
 // HistoryTemplateStruct is a struct for the HistoryTemplate.
