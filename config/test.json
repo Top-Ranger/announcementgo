@@ -2,8 +2,8 @@
     "Key": "test",
     "ShortDescription": "test announcement",
 	"Plugins": ["RSS", "SimpleSendMail", "Telegram", "RegisterMail", "Discord"],
-	"UsersSeeErrors": false,
-	"UsersCanDeleteMessages": true,
+	"UsersSeeErrors": true,
+	"UsersCanDeleteMessages": false,
 	"PasswordMethod": "plain",
 	"PasswordAdmin": ["admin"],
 	"PasswordUser": ["test"]
