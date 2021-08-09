@@ -77,6 +77,7 @@ func simpleSendMailFactory(key, shortDescription string, errorChannel chan strin
 
 const simpleSendMailConfig = `
 <h1>SimpleSendMail</h1>
+<p>Server must be connected over TLS</p>
 {{.ConfigValidFragment}}
 <form method="POST">
 	<input type="hidden" name="target" value="SimpleSendMail">
@@ -235,18 +236,19 @@ func (s *simpleSendMail) ProcessConfigChange(r *http.Request) error {
 	}
 
 	auth := smtp.PlainAuth("", s.SMTPUser, s.SMTPPassword, s.SMTPServer)
-	c, err := smtp.Dial(strings.Join([]string{s.SMTPServer, strconv.Itoa(s.SMTPServerPort)}, ":"))
+	conn, err := tls.Dial("tcp", strings.Join([]string{s.SMTPServer, strconv.Itoa(s.SMTPServerPort)}, ":"), &tls.Config{ServerName: s.SMTPServer, MinVersion: tls.VersionTLS12})
+	if err != nil {
+		s.SMTPPassword = ""
+		return err
+	}
+	defer conn.Close()
+
+	c, err := smtp.NewClient(conn, s.SMTPServer)
 	if err != nil {
 		s.SMTPPassword = ""
 		return err
 	}
 	defer c.Close()
-
-	err = c.StartTLS(&tls.Config{ServerName: s.SMTPServer})
-	if err != nil {
-		s.SMTPPassword = ""
-		return err
-	}
 
 	err = c.Auth(auth)
 	if err != nil {
@@ -282,7 +284,13 @@ func (s *simpleSendMail) NewAnnouncement(a registry.Announcement, id string) {
 		return
 	}
 
-	mail := mailyak.New(fmt.Sprint(s.SMTPServer, ":", strconv.Itoa(s.SMTPServerPort)), smtp.PlainAuth("", s.SMTPUser, s.SMTPPassword, s.SMTPServer))
+	mail, err := mailyak.NewWithTLS(fmt.Sprint(s.SMTPServer, ":", strconv.Itoa(s.SMTPServerPort)), smtp.PlainAuth("", s.SMTPUser, s.SMTPPassword, s.SMTPServer), &tls.Config{ServerName: s.SMTPServer, MinVersion: tls.VersionTLS12})
+	if err != nil {
+		em := fmt.Sprintf("RegisterMail (%s): error while connecting to server: %s", s.key, err.Error())
+		log.Println(em)
+		s.e <- em
+		return
+	}
 
 	mail.From(s.From.Address)
 	mail.FromName(s.From.Name)
@@ -303,7 +311,7 @@ func (s *simpleSendMail) NewAnnouncement(a registry.Announcement, id string) {
 
 	mail.Plain().Set(a.Message)
 	mail.HTML().Set(string(helper.Format([]byte(a.Message))))
-	err := mail.Send()
+	err = mail.Send()
 	if err != nil {
 		em := fmt.Sprintf("SimpleSendMail (%s): error while sending announcement (%s): %s", s.key, a.Header, err.Error())
 		log.Println(em)

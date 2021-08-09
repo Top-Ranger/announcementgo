@@ -603,6 +603,7 @@ var registerMailConfigTemplate *template.Template
 
 const registerMailConfig = `
 <h1>RegisterMail</h1>
+<p>Server must be connected over TLS</p>
 {{.ConfigValidFragment}}
 <p id="RegisterMail_path"></p>
 <form method="POST">
@@ -893,18 +894,19 @@ func (r *registerMail) ProcessConfigChange(req *http.Request) error {
 	}
 
 	auth := smtp.PlainAuth("", r.SMTPUser, r.SMTPPassword, r.SMTPServer)
-	c, err := smtp.Dial(strings.Join([]string{r.SMTPServer, strconv.Itoa(r.SMTPServerPort)}, ":"))
+	conn, err := tls.Dial("tcp", strings.Join([]string{r.SMTPServer, strconv.Itoa(r.SMTPServerPort)}, ":"), &tls.Config{ServerName: r.SMTPServer, MinVersion: tls.VersionTLS12})
+	if err != nil {
+		r.SMTPPassword = ""
+		return err
+	}
+	defer conn.Close()
+
+	c, err := smtp.NewClient(conn, r.SMTPServer)
 	if err != nil {
 		r.SMTPPassword = ""
 		return err
 	}
 	defer c.Close()
-
-	err = c.StartTLS(&tls.Config{ServerName: r.SMTPServer})
-	if err != nil {
-		r.SMTPPassword = ""
-		return err
-	}
 
 	err = c.Auth(auth)
 	if err != nil {
@@ -1005,7 +1007,13 @@ func (r *registerMail) sendWorker() {
 				continue
 			}
 
-			mail := mailyak.New(fmt.Sprint(r.SMTPServer, ":", strconv.Itoa(r.SMTPServerPort)), smtp.PlainAuth("", r.SMTPUser, r.SMTPPassword, r.SMTPServer))
+			mail, err := mailyak.NewWithTLS(fmt.Sprint(r.SMTPServer, ":", strconv.Itoa(r.SMTPServerPort)), smtp.PlainAuth("", r.SMTPUser, r.SMTPPassword, r.SMTPServer), &tls.Config{ServerName: r.SMTPServer, MinVersion: tls.VersionTLS12})
+			if err != nil {
+				em := fmt.Sprintf("RegisterMail (%s): error while connecting to server: %s", r.key, err.Error())
+				log.Println(em)
+				r.e <- em
+				continue
+			}
 
 			mail.From(r.From.Address)
 			mail.FromName(r.From.Name)
@@ -1020,7 +1028,7 @@ func (r *registerMail) sendWorker() {
 			mail.HTML().Set(string(helper.Format([]byte(process[i].Announcement.Message))))
 
 			mail.To(process[i].To.Data)
-			err := mail.Send()
+			err = mail.Send()
 			if err != nil {
 				em := fmt.Sprintf("RegisterMail (%s): error while sending announcement (%s): %s", r.key, process[i].Announcement.Header, err.Error())
 				log.Println(em)
