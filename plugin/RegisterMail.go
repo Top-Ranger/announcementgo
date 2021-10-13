@@ -613,7 +613,7 @@ const registerMailConfig = `
 	<p><input id="RegisterMail_server" type="text" name="server" value="{{.Server}}" placeholder="server" required> <label for="RegisterMail_server">SMTP server</label></p>
 	<p><input id="RegisterMail_port" type="number" min="0" max="65535" step="1" name="port" value="{{.Port}}" placeholder="port" required> <label for="RegisterMail_port">SMTP port</label></p>
 	<p><input id="RegisterMail_user" type="text" name="user" value="{{.User}}" placeholder="user" required> <label for="RegisterMail_user">user</label></p>
-	<p><input id="RegisterMail_password" type="password" name="password" placeholder="password"> <label for="RegisterMail_password">password</label></p>
+	<p><input id="RegisterMail_password" type="password" name="password" placeholder="password"> <label for="RegisterMail_password">password (empty for disabling password protection)</label></p>
 	<p><input id="RegisterMail_rate" type="number" min="0" step="1" name="rate" value="{{.RateLimit}}" placeholder="rate" required> <label for="RegisterMail_rate">rate limit (per minute)</label></p>
 	<p><label for="RegisterMail_registermailtext">text for initial register confirmation mail</label></p> <textarea id="RegisterMail_registermailtext" name="registermailtext" rows="5" placeholder="register mail text" required>{{.RegisterMailText}}</textarea> <br>
 	<p><label for="RegisterMail_unregisterlinktext">text displayed before unregister link on every mail</label></p> <textarea id="RegisterMail_unregisterlinktext" name="unregisterlinktext" rows="5" placeholder="unregister link text" required>{{.UnregisterLinkText}}</textarea> <br>
