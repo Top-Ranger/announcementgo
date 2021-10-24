@@ -222,7 +222,7 @@ func (s *simpleSendMail) ProcessConfigChange(r *http.Request) error {
 			return err
 		}
 		if i < 0 || i > 65535 {
-			return fmt.Errorf("Port %d out of range", i)
+			return fmt.Errorf("port %d out of range", i)
 		}
 		s.SMTPServerPort = i
 	}

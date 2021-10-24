@@ -477,7 +477,7 @@ func (t *telegram) formatMessage(message string) (string, error) {
 	md := goldmark.New(goldmark.WithExtensions(extension.GFM), goldmark.WithRendererOptions(html.WithHardWraps()))
 	err := md.Convert([]byte(message), &buf)
 	if err != nil {
-		return "", fmt.Errorf("Error rendering markdown: %w", err)
+		return "", fmt.Errorf("error rendering markdown: %w", err)
 	}
 
 	// Work around for correct line breaks in Telegram message

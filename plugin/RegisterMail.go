@@ -880,7 +880,7 @@ func (r *registerMail) ProcessConfigChange(req *http.Request) error {
 			return err
 		}
 		if i < 0 || i > 65535 {
-			return fmt.Errorf("Port %d out of range", i)
+			return fmt.Errorf("port %d out of range", i)
 		}
 		r.SMTPServerPort = i
 	}
@@ -920,7 +920,7 @@ func (r *registerMail) ProcessConfigChange(req *http.Request) error {
 			return err
 		}
 		if i < 0 {
-			return fmt.Errorf("Rate limit %d out of range", i)
+			return fmt.Errorf("rate limit %d out of range", i)
 		}
 		r.RateLimit = i
 	}
