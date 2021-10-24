@@ -443,7 +443,7 @@ func (t *telegram) sendWorker() {
 					if apierror.Code != 400 && apierror.Code != 500 {
 						t.removeTarget(message.Target)
 					}
-					showError = apierror.Code != 403
+					showError = (apierror.Code) != 403 && (apierror.Code != 401)
 				}
 				if showError {
 					em := fmt.Sprintln("telegram:", err)
