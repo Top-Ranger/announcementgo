@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -68,6 +69,8 @@ func loadConfig(path string) (ConfigStruct, error) {
 
 func main() {
 	configPath := flag.String("config", "./config.json", "Path to json config for AnnouncementGo!")
+	dumpAnnouncements := flag.String("dumpAnnouncements", "", "If set, all anouncements of the provided key will be dumped to stdout")
+	insertAnnouncements := flag.String("insertAnnouncements", "", "If set, announcements are read from stdin and directly inserted for the provided key (announcements will not be send)")
 	flag.Parse()
 
 	c, err := loadConfig(*configPath)
@@ -98,6 +101,43 @@ func main() {
 	}
 
 	registry.CurrentDataSafe = datasafe
+
+	if *dumpAnnouncements != "" {
+		a, err := datasafe.GetAllAnnouncements(*dumpAnnouncements)
+		if err != nil {
+			log.Println("Can not read announcements for dump:", err)
+			return
+		}
+		e := json.NewEncoder(os.Stdout)
+		e.SetIndent("", "\t")
+		err = e.Encode(a)
+		if err != nil {
+			log.Println("Can not encode announcements for dump:", err)
+			return
+		}
+		return
+	}
+
+	if *insertAnnouncements != "" {
+		b, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			log.Println("Can not read announcements for insert:", err)
+			return
+		}
+		var a []registry.Announcement
+		err = json.Unmarshal(b, &a)
+		if err != nil {
+			log.Println("Can not decode announcements for insert:", err)
+			return
+		}
+		for i := range a {
+			_, err := datasafe.SaveAnnouncement(*insertAnnouncements, a[i])
+			if err != nil {
+				log.Printf("Can not save %+v to dataset (will ignore it): %s", a[i], err)
+			}
+		}
+		return
+	}
 
 	err = server.InitialiseServer(server.Config{Address: config.Address, PathDSGVO: config.PathDSGVO, PathImpressum: config.PathImpressum, CookieTimeMinute: config.LoginMinutes})
 	if err != nil {
