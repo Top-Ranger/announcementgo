@@ -21,6 +21,10 @@ The configuration of the announcements is splitted in two parts:
    - The admin of an announcement page can configure the plugins through the website.
 (The user can only send announcements, but can neither configure plugins nor see the configration)
 
+To build the MySQL / MariaDB backend, you have to use the following build command:
+go build -tags="mysql"
+Please note that "parseTime=true" is mandatory in the DSN.
+
 AnnouncementGo! is licenced under Apache-2.0.
 
 ++++++++++++++++++++++++++++++++++++++++++++
