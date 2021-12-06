@@ -1,3 +1,4 @@
 CREATE DATABASE announcementgo;
 CREATE TABLE announcementgo.announcement (id BIGINT UNSIGNED AUTO_INCREMENT, k VARCHAR(600) CHARACTER SET latin1 NOT NULL, header LONGTEXT NOT NULL, message LONGTEXT NOT NULL, time DATETIME NOT NULL, PRIMARY KEY(id));
 CREATE TABLE announcementgo.config (k VARCHAR(600) CHARACTER SET latin1 NOT NULL, plugin VARCHAR(600) CHARACTER SET latin1 NOT NULL, data LONGBLOB, PRIMARY KEY(k, plugin));
+CREATE INDEX k ON announcementgo.announcement (k);
