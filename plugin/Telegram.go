@@ -187,7 +187,9 @@ func (t *telegram) update() error {
 			if !found {
 				t.Targets = append(t.Targets, newID)
 			}
-			t.bot.Send(m.Chat, translation.GetDefaultTranslation().BotUserGreetings, telebot.NoPreview)
+			if newID != int64(t.bot.Me.ID) {
+				t.bot.Send(m.Chat, translation.GetDefaultTranslation().BotUserGreetings, telebot.NoPreview)
+			}
 			t.update()
 		}
 
