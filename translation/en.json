@@ -19,6 +19,7 @@
     "DeleteMessages": "Delete messages",
     "BotAnswerMessage": "I'm sorry, but at the moment I can't respond to messages.",
     "BotSendOnThisChannel": "From now on, I will send announcements on this channel.",
+    "BotUserGreetings": "Hi, from now on I'll send you all announcements.",
     "RegisterMailRegister": "Register your mail address to get announcements",
     "RegisterMailRegisterCaptchaFailure": "Captcha verification failed - please try again",
     "RegisterMailRegisterNow": "register now",

@@ -49,6 +49,7 @@ type Translation struct {
 	DeleteMessages                     string
 	BotAnswerMessage                   string
 	BotSendOnThisChannel               string
+	BotUserGreetings                   string
 	RegisterMailRegister               string
 	RegisterMailRegisterCaptchaFailure string
 	RegisterMailRegisterNow            string
