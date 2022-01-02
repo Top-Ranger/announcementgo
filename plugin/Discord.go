@@ -415,6 +415,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 							continue
 						}
 						messageSent = true
+						break
 					}
 				}
 			}
@@ -429,6 +430,8 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 							log.Println(em)
 							d.e <- em
 						}
+						messageSent = true
+						break
 					}
 				}
 			}
