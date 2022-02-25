@@ -23,7 +23,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -36,7 +35,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 // see https://core.telegram.org/bots#3-how-do-i-create-a-bot
@@ -167,13 +166,20 @@ func (t *telegram) update() error {
 			return err
 		}
 
-		addedFunction := func(m *telebot.Message) {
+		addedFunction := func(c telebot.Context) error {
 			counter.StartProcess()
 			defer counter.EndProcess()
 			t.l.Lock()
 			defer t.l.Unlock()
 
-			newID := m.Chat.ID
+			chat := c.Chat()
+			if chat == nil {
+				em := fmt.Sprintln("telegram (addedFunction): chat should not be nil, but it is")
+				log.Println(em)
+				t.e <- em
+				return err
+			}
+			newID := chat.ID
 			found := false
 			for i := range t.Targets {
 				if t.Targets[i] == newID {
@@ -188,18 +194,32 @@ func (t *telegram) update() error {
 				t.Targets = append(t.Targets, newID)
 			}
 			if newID != int64(t.bot.Me.ID) {
-				t.bot.Send(m.Chat, translation.GetDefaultTranslation().BotUserGreetings, telebot.NoPreview)
+				err = c.Send(translation.GetDefaultTranslation().BotUserGreetings, telebot.NoPreview)
+				if err != nil {
+					em := fmt.Sprintln("telegram:", err)
+					log.Println(em)
+					t.e <- em
+					return err
+				}
 			}
-			t.update()
+			return t.update()
 		}
 
 		t.bot.Handle(telebot.OnAddedToGroup, addedFunction)
 		t.bot.Handle("/start", addedFunction)
 
-		messageFunc := func(m *telebot.Message) {
+		messageFunc := func(c telebot.Context) error {
 			counter.StartProcess()
 			defer counter.EndProcess()
 			t.l.Lock()
+
+			m := c.Message()
+			if m == nil {
+				em := fmt.Sprintln("telegram (messageFunc): message should not be nil, but it is")
+				log.Println(em)
+				t.e <- em
+				return err
+			}
 
 			if !m.FromGroup() && !m.FromChannel() && !m.IsService() {
 				_, err = t.bot.Send(m.Chat, translation.GetDefaultTranslation().BotAnswerMessage, telebot.NoPreview)
@@ -210,7 +230,7 @@ func (t *telegram) update() error {
 				}
 			}
 			t.l.Unlock()
-			addedFunction(m)
+			return addedFunction(c)
 		}
 
 		t.bot.Handle(telebot.OnText, messageFunc)
@@ -225,20 +245,27 @@ func (t *telegram) update() error {
 		t.bot.Handle(telebot.OnContact, messageFunc)
 		t.bot.Handle(telebot.OnLocation, messageFunc)
 		t.bot.Handle(telebot.OnVenue, messageFunc)
+		t.bot.Handle(telebot.OnMedia, messageFunc)
 
-		t.bot.Handle(telebot.OnMigration, func(from, to int64) {
+		t.bot.Handle(telebot.OnMigration, func(c telebot.Context) error {
 			counter.StartProcess()
 			defer counter.EndProcess()
 			t.l.Lock()
 			defer t.l.Unlock()
+
+			from, to := c.Migration()
 
 			for i := range t.Targets {
 				if t.Targets[i] == from {
 					t.Targets[i] = to
 				}
 			}
-			t.update()
+			return t.update()
 		})
+
+		t.bot.OnError = func(err error, c telebot.Context) {
+			// Just do nothing here, all logging is already done where errors might occur
+		}
 
 		t.currentToken = t.Token
 		go t.bot.Start()
@@ -422,7 +449,7 @@ func (t *telegram) sendWorker() {
 			}
 
 			// Send message
-			c, err := t.bot.ChatByID(strconv.FormatInt(message.Target, 10))
+			c, err := t.bot.ChatByID(message.Target)
 			if err != nil {
 				em := fmt.Sprintln("telegram:", err)
 				log.Println(em)
@@ -440,7 +467,7 @@ func (t *telegram) sendWorker() {
 			_, err = t.bot.Send(c, message.Message, &telebot.SendOptions{DisableWebPagePreview: true, ParseMode: telebot.ModeHTML, DisableNotification: message.Silent})
 			if err != nil {
 
-				apierror, ok := err.(*telebot.APIError)
+				apierror, ok := err.(*telebot.Error)
 				showError := !ok
 				if ok {
 					if apierror.Code != 400 && apierror.Code != 500 {
