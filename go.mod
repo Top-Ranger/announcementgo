@@ -11,9 +11,9 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.18
-	github.com/yuin/goldmark v1.4.7
-	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+	github.com/yuin/goldmark v1.4.8
+	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
+	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5 // indirect
 	gopkg.in/telebot.v3 v3.0.0
 )
