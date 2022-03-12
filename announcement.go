@@ -379,6 +379,10 @@ func (a *announcement) Initialise() error {
 			return
 		}
 
+		for i := 0; i < len(h)/2; i++ {
+			h[i], h[len(h)-1-i] = h[len(h)-1-i], h[i]
+		}
+
 		td := templates.HistoryTemplateStruct{
 			Key:              a.Key,
 			ShortDescription: a.ShortDescription,
@@ -390,6 +394,9 @@ func (a *announcement) Initialise() error {
 			log.Printf("announcement history template (%s): %s", a.Key, err.Error())
 		}
 	})
+	if err != nil {
+		return err
+	}
 
 	err = server.AddHandle(a.Key, "deleteErrors", func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -411,8 +418,10 @@ func (a *announcement) Initialise() error {
 		a.l.Unlock()
 		counter.EndProcess()
 		rw.WriteHeader(http.StatusOK)
-		return
 	})
+	if err != nil {
+		return err
+	}
 
 	go announcemetWorker(a, errorChannel)
 

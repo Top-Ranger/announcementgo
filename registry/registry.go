@@ -169,3 +169,21 @@ func ComparePasswords(method, password, truth string) (bool, error) {
 	}
 	return f(password, truth)
 }
+
+// AnnouncementSlice implements all methods for sort.Interface.
+type AnnouncementSlice []Announcement
+
+// Len implements Len of sort.Interface.
+func (a AnnouncementSlice) Len() int {
+	return len(a)
+}
+
+// Less implements Less of sort.Interface sorted by date.
+func (a AnnouncementSlice) Less(i, j int) bool {
+	return a[i].Time.Before(a[j].Time)
+}
+
+// Swap implements Swap of sort.Interface.
+func (a AnnouncementSlice) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
