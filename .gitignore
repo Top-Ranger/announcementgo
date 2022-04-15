@@ -2,3 +2,4 @@ config/*
 !config/test.json
 announcementgo
 data/**
+.vscode/*
