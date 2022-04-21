@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Marcus Soll
+// Copyright 2020,2022 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,8 +76,11 @@ func printInfo() {
 		return
 	}
 
+	log.Printf("- go version: %s", bi.GoVersion)
 	for _, s := range bi.Settings {
 		switch s.Key {
+		case "-tags":
+			log.Printf("- build tags: %s", s.Value)
 		case "vcs.revision":
 			l := 7
 			if len(s.Value) > 7 {
