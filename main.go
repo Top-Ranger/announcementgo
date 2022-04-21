@@ -24,6 +24,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/Top-Ranger/announcementgo/counter"
@@ -67,7 +68,31 @@ func loadConfig(path string) (ConfigStruct, error) {
 	return c, nil
 }
 
+func printInfo() {
+	log.Println("AnnouncementGo!")
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		log.Print("- no build info found")
+		return
+	}
+
+	for _, s := range bi.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			l := 7
+			if len(s.Value) > 7 {
+				s.Value = s.Value[:l]
+			}
+			log.Printf("- commit: %s", s.Value)
+		case "vcs.modified":
+			log.Printf("- files modified: %s", s.Value)
+		}
+	}
+}
+
 func main() {
+	printInfo()
+
 	configPath := flag.String("config", "./config.json", "Path to json config for AnnouncementGo!")
 	dumpAnnouncements := flag.String("dumpAnnouncements", "", "If set, all anouncements of the provided key will be dumped to stdout")
 	insertAnnouncements := flag.String("insertAnnouncements", "", "If set, announcements are read from stdin and directly inserted for the provided key (announcements will not be send)")
