@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020,2021 Marcus Soll
+// Copyright 2020,2021,2022 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ var impressum []byte
 var cachedFiles embed.FS
 var etagCompare string
 var cookieTime = 60
+var cookieSecure = false
 
 var robottxt = []byte(`User-agent: *
 Disallow: /`)
@@ -59,6 +60,12 @@ type Config struct {
 	PathDSGVO        string
 	PathImpressum    string
 	CookieTimeMinute int
+}
+
+// ConfigCookieSecure sets whether future cookies will be secure.
+// This method can not be called in parallel with any method of server which sets cookies.
+func ConfigCookieSecure(secure bool) {
+	cookieSecure = secure
 }
 
 // SetLoginCookie creates a valid login cookie for the given key.
@@ -77,6 +84,7 @@ func SetLoginCookie(key string, admin bool, rw http.ResponseWriter, r *http.Requ
 	cookie.MaxAge = 60 * cookieTime
 	cookie.SameSite = http.SameSiteLaxMode
 	cookie.HttpOnly = true
+	cookie.Secure = cookieSecure
 	http.SetCookie(rw, &cookie)
 	return nil
 }

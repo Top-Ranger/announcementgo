@@ -38,16 +38,17 @@ import (
 
 // ConfigStruct contains all configuration options for PollGo!
 type ConfigStruct struct {
-	Language            string
-	Address             string
-	LogFailedLogin      bool
-	LoginMinutes        int
-	PathConfig          string
-	PathImpressum       string
-	PathDSGVO           string
-	AnnouncementsFolder string
-	DataSafe            string
-	DataSafeConfig      string
+	Language                     string
+	Address                      string
+	LogFailedLogin               bool
+	LoginMinutes                 int
+	PathConfig                   string
+	PathImpressum                string
+	PathDSGVO                    string
+	AnnouncementsFolder          string
+	DataSafe                     string
+	DataSafeConfig               string
+	InsecureAllowCookiesOverHTTP bool
 }
 
 var config ConfigStruct
@@ -166,6 +167,8 @@ func main() {
 		}
 		return
 	}
+
+	server.ConfigCookieSecure(!c.InsecureAllowCookiesOverHTTP)
 
 	err = server.InitialiseServer(server.Config{Address: config.Address, PathDSGVO: config.PathDSGVO, PathImpressum: config.PathImpressum, CookieTimeMinute: config.LoginMinutes})
 	if err != nil {
