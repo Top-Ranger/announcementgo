@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 Marcus Soll
+// Copyright 2021,2022 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -58,6 +59,9 @@ func (m *mysql) InitialiseDatasafe(config []byte) error {
 	if err != nil {
 		return fmt.Errorf("mysql: can not open '%s': %w", m.dsn, err)
 	}
+	db.SetConnMaxLifetime(time.Minute * 1)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
 	m.db = db
 	return nil
 }
