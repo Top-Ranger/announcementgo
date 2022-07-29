@@ -20,7 +20,7 @@
     "BotAnswerMessage": "Es tut mir leid, aber im Moment kann ich noch nicht auf Nachrichten antworten.",
     "BotSendOnThisChannel": "Ich werde in Zukunft Bekanntmachungen auf diesem Kanal senden.",
     "BotUserGreetings": "Hallo, ich werde Ihnen ab jetzt alle Bekanntmachungen zusenden.",
-    "RegisterMailRegister": "Registriere deine E-Mail, um Benachrichtigungen zu erhalten",
+    "RegisterMailRegister": "Registrieren Sie ihre E-Mail, um Benachrichtigungen zu erhalten",
     "RegisterMailRegisterCaptchaFailure": "Captcha falsch - bitte versuchen Sie es nochmal",
     "RegisterMailRegisterNow": "Jetzt registrieren",
     "RegisterMailRegisterSuccess": "Registrierung erfolgreich. Sie sollten in Kürze eine Mail mit einem Verifizierungslink bekommen (kann einige Minuten dauern). Bitte klicken Sie auf dem Link, um die Registrierung abzuschließen.",

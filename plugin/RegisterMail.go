@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020,2021 Marcus Soll
+// Copyright 2020,2021,2022 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -601,6 +601,8 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 
 var registerMailConfigTemplate *template.Template
 
+const registerMailRetries = 10
+
 const registerMailConfig = `
 <h1>RegisterMail</h1>
 <p>Server must be connected over TLS</p>
@@ -731,6 +733,7 @@ type registerMailData struct {
 type registerMailQueueObject struct {
 	To           registerMailData
 	Announcement registry.Announcement
+	NumberErrors int
 }
 
 type registerMail struct {
@@ -953,7 +956,7 @@ func (r *registerMail) NewAnnouncement(a registry.Announcement, id string) {
 		q := new(registerMailQueueObject)
 		q.Announcement = registry.Announcement{
 			Header:  a.Header,
-			Message: strings.Join([]string{a.Message, r.UnregisterLinkText, url}, "\n\n"),
+			Message: strings.Join([]string{a.Message, "\n***\n", r.UnregisterLinkText, url}, "\n\n"),
 			Time:    a.Time,
 		}
 		q.To = r.ToData[i]
@@ -970,20 +973,16 @@ func (r *registerMail) NewAnnouncement(a registry.Announcement, id string) {
 
 func (r *registerMail) sendWorker() {
 	for {
-		// Wait for initial correct configuration
-		r.l.Lock()
-		if r.verify() {
-			r.l.Unlock()
-			break
-		}
-		r.l.Unlock()
-		time.Sleep(1 * time.Minute)
-	}
-
-	for {
 		time.Sleep(1 * time.Minute)
 		counter.StartProcess()
 		r.l.Lock()
+
+		if !r.verify() {
+			// No valid configuration, jump out early
+			r.l.Unlock()
+			counter.EndProcess()
+			continue
+		}
 
 		number := r.RateLimit
 		if number == 0 || number > len(r.Queue) {
@@ -995,13 +994,6 @@ func (r *registerMail) sendWorker() {
 		r.Queue = append(temp, r.Queue[number:]...)
 
 		for i := range process {
-			if !r.verify() {
-				em := fmt.Sprintf("RegisterMail (%s): no valid configuration, can not send announcement (%s) to %s", r.key, process[i].Announcement.Header, process[i].To.Data)
-				log.Println(em)
-				r.e <- em
-				continue
-			}
-
 			if process[i].To.Hash {
 				// This is no mail address - skip
 				continue
@@ -1009,7 +1001,13 @@ func (r *registerMail) sendWorker() {
 
 			mail, err := mailyak.NewWithTLS(fmt.Sprint(r.SMTPServer, ":", strconv.Itoa(r.SMTPServerPort)), smtp.PlainAuth("", r.SMTPUser, r.SMTPPassword, r.SMTPServer), &tls.Config{ServerName: r.SMTPServer, MinVersion: tls.VersionTLS12})
 			if err != nil {
-				em := fmt.Sprintf("RegisterMail (%s): error while connecting to server: %s", r.key, err.Error())
+				again := "final error"
+				process[i].NumberErrors++
+				if process[i].NumberErrors <= registerMailRetries {
+					r.Queue = append(r.Queue, process[i])
+					again = "trying again"
+				}
+				em := fmt.Sprintf("RegisterMail (%s): error while connecting to server (try: %d, %s): %s", r.key, process[i].NumberErrors, again, err.Error())
 				log.Println(em)
 				r.e <- em
 				continue
@@ -1030,7 +1028,13 @@ func (r *registerMail) sendWorker() {
 			mail.To(process[i].To.Data)
 			err = mail.Send()
 			if err != nil {
-				em := fmt.Sprintf("RegisterMail (%s): error while sending announcement (%s): %s", r.key, process[i].Announcement.Header, err.Error())
+				again := "final error"
+				process[i].NumberErrors++
+				if process[i].NumberErrors <= registerMailRetries {
+					r.Queue = append(r.Queue, process[i])
+					again = "trying again"
+				}
+				em := fmt.Sprintf("RegisterMail (%s): error while sending announcement (%s; try: %d, %s): %s", r.key, process[i].Announcement.Header, process[i].NumberErrors, again, err.Error())
 				log.Println(em)
 				r.e <- em
 			}
@@ -1044,6 +1048,5 @@ func (r *registerMail) sendWorker() {
 
 		r.l.Unlock()
 		counter.EndProcess()
-
 	}
 }
