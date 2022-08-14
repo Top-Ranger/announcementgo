@@ -27,5 +27,7 @@
     "RegisterMailValidationSuccess": "Registrierung vollständig. Sie sollten ab jetzt Benachrichtigungen erhalten.",
     "RegisterMailUnregister": "Benachrichtigungen nicht mehr erhalten",
     "RegisterMailUnregisterSuccessful": "Sie werden keine Benachrichtigungen mehr erhalten.",
-    "RegisterMailRegistrationClosed": "Die Registrierung ist nicht geöffnet."
+    "RegisterMailRegistrationClosed": "Die Registrierung ist nicht geöffnet.",
+    "RegisterMailEMail": "E-Mail",
+    "RegisterMailCaptcha": "Captcha"
 }

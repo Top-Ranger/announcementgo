@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020,2021 Marcus Soll
+// Copyright 2020,2021,2022 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,6 +58,8 @@ type Translation struct {
 	RegisterMailUnregister             string
 	RegisterMailUnregisterSuccessful   string
 	RegisterMailRegistrationClosed     string
+	RegisterMailEMail                  string
+	RegisterMailCaptcha                string
 }
 
 const defaultLanguage = "en"
