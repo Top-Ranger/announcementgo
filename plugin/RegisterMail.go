@@ -670,8 +670,8 @@ const registerMailRegisterSite = `
 <p>{{.Translation.RegisterMailRegister}}</p>
 <form method="POST">
    <input type="hidden" name="id" value="{{.CaptchaID}}">
-   <p>E-Mail: <br> <input type="email" name="mail" placeholder="{{.Translation.RegisterMailEMail}}" required></p>
-   <p><strong>Captcha</strong> <br> {{.Translation.CaptchaTextBefore}} {{.Captcha}} {{.Translation.CaptchaTextAfter}}<br> <input type="captcha" name="c" placeholder="{{.Translation.RegisterMailCaptcha}}" required autocomplete="off"></p>
+   <p>{{.Translation.RegisterMailEMail}}: <br> <input type="email" name="mail" placeholder="{{.Translation.RegisterMailEMail}}" required></p>
+   <p><strong>{{.Translation.RegisterMailCaptcha}}:</strong> <br> {{.Translation.CaptchaTextBefore}} {{.Captcha}} {{.Translation.CaptchaTextAfter}}<br> <input type="captcha" name="c" placeholder="{{.Translation.RegisterMailCaptcha}}" required autocomplete="off"></p>
    {{if .RegisterPassword}}
    <p>{{.Translation.Password}} <br> <input type="password" name="rp" placeholder="{{.Translation.Password}}" required></p>
    {{end}}

@@ -28,6 +28,6 @@
     "RegisterMailUnregister": "Unsubscribe from announcements",
     "RegisterMailUnregisterSuccessful": "You are unsubscribed. You will not receive any announcements anymore.",
     "RegisterMailRegistrationClosed": "Registration is closed.",
-    "RegisterMailEMail": "e-mail",
-    "RegisterMailCaptcha": "captcha"
+    "RegisterMailEMail": "E-Mail",
+    "RegisterMailCaptcha": "Captcha"
 }
