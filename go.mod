@@ -8,7 +8,7 @@ require (
 	github.com/domodwyer/mailyak/v3 v3.3.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/feeds v1.1.1
-	github.com/microcosm-cc/bluemonday v1.0.19
+	github.com/microcosm-cc/bluemonday v1.0.20
 	github.com/yuin/goldmark v1.4.14
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	gopkg.in/telebot.v3 v3.0.0
@@ -19,6 +19,6 @@ require (
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
-	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
+	golang.org/x/sys v0.0.0-20220909162455-aba9fc2a8ff2 // indirect
 )
