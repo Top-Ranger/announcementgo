@@ -157,6 +157,9 @@ func (t *telegram) update() error {
 		t.bot, err = telebot.NewBot(telebot.Settings{
 			Token:  t.Token,
 			Poller: &telebot.LongPoller{Timeout: 11 * time.Second},
+			OnError: func(err error, c telebot.Context) {
+				// Just do nothing here, all logging is already done where errors might occur
+			},
 		})
 		if err != nil {
 			t.bot = nil
@@ -262,10 +265,6 @@ func (t *telegram) update() error {
 			}
 			return t.update()
 		})
-
-		t.bot.OnError = func(err error, c telebot.Context) {
-			// Just do nothing here, all logging is already done where errors might occur
-		}
 
 		t.currentToken = t.Token
 		go t.bot.Start()
