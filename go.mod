@@ -10,8 +10,8 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/microcosm-cc/bluemonday v1.0.21
 	github.com/yuin/goldmark v1.5.2
-	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
-	gopkg.in/telebot.v3 v3.1.0
+	golang.org/x/crypto v0.1.0
+	gopkg.in/telebot.v3 v3.1.2
 )
 
 require (
@@ -19,6 +19,6 @@ require (
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
-	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
-	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
