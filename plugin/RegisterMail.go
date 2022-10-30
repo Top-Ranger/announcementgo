@@ -27,6 +27,7 @@ import (
 	"net/mail"
 	"net/smtp"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -267,7 +268,6 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 				Salt: saltString,
 				Hash: false,
 			}
-			q.UnsubscribeURL = url
 			r.Queue = append(r.Queue, q)
 
 			t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterSuccess)), Translation: tl}
@@ -962,6 +962,7 @@ func (r *registerMail) NewAnnouncement(a registry.Announcement, id string) {
 			Time:    a.Time,
 		}
 		q.To = r.ToData[i]
+		q.UnsubscribeURL = url
 		r.Queue = append(r.Queue, q)
 	}
 
@@ -1031,6 +1032,7 @@ func (r *registerMail) sendWorker() {
 				mail.AddHeader("List-Unsubscribe", fmt.Sprintf("<%s>", process[i].UnsubscribeURL))
 				mail.AddHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
 			}
+			mail.AddHeader("List-Id", fmt.Sprintf("%s (AnnouncementGo! RegisterMail), <%s>", r.description, r.calculateListIdHost(r.ServerName)))
 
 			mail.To(process[i].To.Data)
 			err = mail.Send()
@@ -1056,4 +1058,17 @@ func (r *registerMail) sendWorker() {
 		r.l.Unlock()
 		counter.EndProcess()
 	}
+}
+
+func (r registerMail) calculateListIdHost(URL string) string {
+	URL = strings.TrimPrefix(URL, "http://")
+	URL = strings.TrimPrefix(URL, "https://")
+	split := strings.Split(URL, "/")
+	if len(split) < 2 {
+		return URL
+	}
+	removePort := strings.Split(split[0], ":")
+	removePort = append(removePort, split[len(split)-1])
+	sort.Slice(removePort, func(i, j int) bool { return j < i })
+	return strings.Join(removePort, ".")
 }
