@@ -267,6 +267,7 @@ func registerMailFactory(key, shortDescription string, errorChannel chan string)
 				Salt: saltString,
 				Hash: false,
 			}
+			q.UnsubscribeURL = url
 			r.Queue = append(r.Queue, q)
 
 			t := templates.TextTemplateStruct{Text: template.HTML(template.HTMLEscapeString(tl.RegisterMailRegisterSuccess)), Translation: tl}
@@ -731,9 +732,10 @@ type registerMailData struct {
 }
 
 type registerMailQueueObject struct {
-	To           registerMailData
-	Announcement registry.Announcement
-	NumberErrors int
+	To             registerMailData
+	Announcement   registry.Announcement
+	NumberErrors   int
+	UnsubscribeURL string
 }
 
 type registerMail struct {
@@ -1024,6 +1026,11 @@ func (r *registerMail) sendWorker() {
 
 			mail.Plain().Set(process[i].Announcement.Message)
 			mail.HTML().Set(string(helper.Format([]byte(process[i].Announcement.Message))))
+
+			if process[i].UnsubscribeURL != "" {
+				mail.AddHeader("List-Unsubscribe", fmt.Sprintf("<%s>", process[i].UnsubscribeURL))
+				mail.AddHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+			}
 
 			mail.To(process[i].To.Data)
 			err = mail.Send()
