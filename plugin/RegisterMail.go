@@ -1032,7 +1032,7 @@ func (r *registerMail) sendWorker() {
 				mail.AddHeader("List-Unsubscribe", fmt.Sprintf("<%s>", process[i].UnsubscribeURL))
 				mail.AddHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
 			}
-			mail.AddHeader("List-Id", fmt.Sprintf("%s (AnnouncementGo! RegisterMail), <%s>", r.description, r.calculateListIdHost(r.ServerName)))
+			mail.AddHeader("List-Id", fmt.Sprintf("\"%s (AnnouncementGo! RegisterMail)\" <%s>", strings.ReplaceAll(r.description, "\"", ""), r.calculateListIdHost(r.ServerName)))
 
 			mail.To(process[i].To.Data)
 			err = mail.Send()
