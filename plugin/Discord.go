@@ -280,7 +280,7 @@ func (d *discord) GetConfig() template.HTML {
 		} else {
 			td.URL = fmt.Sprintf("https://discord.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=2048", url.QueryEscape(a.ID))
 		}
-		g, err := d.bot.UserGuilds(100, "", "")
+		g, err := d.bot.UserGuilds(100, "", "", false)
 		if err != nil {
 			em := fmt.Sprintln("discord:", err)
 			log.Println(em)
@@ -362,7 +362,7 @@ func (d *discord) NewAnnouncement(a registry.Announcement, id string) {
 	loop := true
 
 	for loop {
-		guilds, err := d.bot.UserGuilds(100, "", startid)
+		guilds, err := d.bot.UserGuilds(100, "", startid, false)
 		if err != nil {
 			em := fmt.Sprintln("discord:", err)
 			log.Println(em)
