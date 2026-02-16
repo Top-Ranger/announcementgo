@@ -29,5 +29,6 @@
     "RegisterMailUnregisterSuccessful": "Sie werden keine Benachrichtigungen mehr erhalten.",
     "RegisterMailRegistrationClosed": "Die Registrierung ist nicht geöffnet.",
     "RegisterMailEMail": "E-Mail",
-    "RegisterMailCaptcha": "Captcha"
+    "RegisterMailCaptcha": "Captcha",
+    "PluginsNotLoaded": "Folgende Plugins konnten nicht geladen werden:"
 }

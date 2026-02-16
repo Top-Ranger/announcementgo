@@ -31,7 +31,7 @@
     }
     target = target + "deleteErrors"
     xhr.open("Put", target, true);
-      
+
     xhr.onload = function() {
       if (xhr.status == 200) {
         let errors = document.querySelectorAll(".error,.message,.deleteMessages");
@@ -54,12 +54,26 @@
         alert("timeout")
       };
     };
-     
+
     xhr.send();
   }
   </script>
 
+  {{ if ne (len .NotLoaded) 0 }}
+  <div>
+    <h1>{{.Translation.PluginsNotLoaded}}</h1>
+  </div>
+  {{end}}
+  {{range $i, $e := .NotLoaded}}
+  <div class="error">
+    <p>{{$e}}</p>
+  </div>
+  {{end}}
+
   {{ if ne (len .Messages) 0 }}
+  <div>
+    <h1>{{.Translation.Message}}:</h1>
+  </div>
   <div class="deleteMessages">
     <p><button onclick="deleteErrors()">{{.Translation.DeleteMessages}}</button></p>
   </div>

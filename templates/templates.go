@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 Marcus Soll
+// Copyright 2021,2026 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ type AnnouncementTemplateStruct struct {
 	PluginConfig         []template.HTML
 	Translation          translation.Translation
 	Messages             []AnnouncementMessage
+	NotLoaded            []string
 	EnableDeleteMessages bool
 	ShowErrors           bool
 }

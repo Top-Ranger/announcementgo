@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020,2021,2022 Marcus Soll
+// Copyright 2020,2021,2022,2026 Marcus Soll
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import (
 	"github.com/Top-Ranger/announcementgo/translation"
 )
 
+var knownKeysLock = new(sync.Mutex)
 var knownKeys = make(map[string]bool)
 
 type announcement struct {
@@ -49,9 +50,10 @@ type announcement struct {
 	PasswordAdmin          []string
 	PasswordUser           []string
 
-	plugins  []registry.Plugin
-	messages []templates.AnnouncementMessage
-	l        *sync.Mutex
+	plugins   []registry.Plugin
+	messages  []templates.AnnouncementMessage
+	notLoaded map[string]string
+	l         *sync.Mutex
 }
 
 // LoadAnnouncements loads all announcements in a path.
@@ -94,6 +96,8 @@ func (a *announcement) Initialise() error {
 	a.l.Lock()
 	defer a.l.Unlock()
 
+	a.notLoaded = make(map[string]string)
+
 	errorChannel := make(chan string, 100)
 
 	if a.Key == "" {
@@ -104,11 +108,14 @@ func (a *announcement) Initialise() error {
 	}
 	a.Key = url.PathEscape(a.Key)
 
+	knownKeysLock.Lock()
 	ok := knownKeys[a.Key]
 	if ok {
+		knownKeysLock.Unlock()
 		return fmt.Errorf("key already in use")
 	}
 	knownKeys[a.Key] = true
+	knownKeysLock.Unlock()
 
 	a.loadErrors()
 
@@ -125,7 +132,7 @@ func (a *announcement) Initialise() error {
 
 	for i := range a.Plugins {
 		if plugins[a.Plugins[i]] {
-			return fmt.Errorf("announcement: plugin %s found twice", a.Plugins[i])
+			fmt.Errorf("announcement: plugin %s found twice", a.Plugins[i])
 		}
 		pf, ok := registry.GetPlugin(a.Plugins[i])
 		if !ok {
@@ -133,7 +140,9 @@ func (a *announcement) Initialise() error {
 		}
 		p, err := pf(a.Key, a.ShortDescription, errorChannel)
 		if err != nil {
-			return fmt.Errorf("announcement: plugin %s has error %w", a.Plugins[i], err)
+			log.Printf("announcement.Initialise: plugin %s has error %s", a.Plugins[i], err.Error())
+			a.notLoaded[a.Plugins[i]] = err.Error()
+			continue
 		}
 		a.plugins = append(a.plugins, p)
 	}
@@ -167,12 +176,16 @@ func (a *announcement) Initialise() error {
 				ShortDescription: a.ShortDescription,
 				Translation:      translation.GetDefaultTranslation(),
 				Messages:         a.messages,
+				NotLoaded:        make([]string, 0, len(a.notLoaded)),
 			}
 			if admin || a.UsersSeeErrors {
 				td.ShowErrors = true
 			}
 			if admin || (a.UsersSeeErrors && a.UsersCanDeleteMessages) {
 				td.EnableDeleteMessages = true
+			}
+			for k, v := range a.notLoaded {
+				td.NotLoaded = append(td.NotLoaded, fmt.Sprintf("%s: %s", k, v))
 			}
 			a.l.Unlock()
 			if admin {
