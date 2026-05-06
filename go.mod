@@ -6,7 +6,7 @@ require (
 	github.com/Top-Ranger/auth v1.0.0
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/domodwyer/mailyak/v3 v3.6.2
-	github.com/go-sql-driver/mysql v1.9.3
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/yuin/goldmark v1.8.2
